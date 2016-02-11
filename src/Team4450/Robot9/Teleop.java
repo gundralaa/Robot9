@@ -83,7 +83,7 @@ class Teleop
         launchPad.addLaunchPadEventListener(new LaunchPadListener());
         launchPad.Start();
 
-		//leftStick = new JoyStick(robot.leftStick, "LeftStick", JoyStickButtonIDs.TOP_LEFT, this);
+		leftStick = new JoyStick(robot.leftStick, "LeftStick", JoyStickButtonIDs.TOP_LEFT, this);
         //leftStick.addJoyStickEventListener(new LeftStickListener());
         //leftStick.Start();
         
