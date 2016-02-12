@@ -150,7 +150,7 @@ public class LaunchPad
 	{
 		Util.consoleLog();
 		
-		monitorLaunchPadThread.interrupt();
+		if (monitorLaunchPadThread != null) monitorLaunchPadThread.interrupt();
 	}
 
 	// Launch Pad Monitor thread.
