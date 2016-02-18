@@ -4,6 +4,8 @@ import java.lang.Math;
 import java.util.Comparator;
 import java.util.Vector;
 
+import Team4450.Lib.Util;
+
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.Image;
 import com.ni.vision.NIVision.ImageType;
@@ -11,7 +13,7 @@ import com.ni.vision.NIVision.ImageType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
- * Example of finding yellow totes based on retroreflective target.
+ * Example of finding target wiht green light shined on retroreflective tape.
  * This example utilizes an image file, which you need to copy to the roboRIO
  * To use a camera you will have to integrate the appropriate camera details with this example.
  * To use a USB camera instead, see the SimpelVision and AdvancedVision examples for details
@@ -56,9 +58,9 @@ public class Vision2016
 	int 	imaqError;
 
 	// Constants
-	NIVision.Range HUE_RANGE = new NIVision.Range(101, 64);		//Default hue range for yellow tote
-	NIVision.Range SAT_RANGE = new NIVision.Range(88, 255);		//Default saturation range for yellow tote
-	NIVision.Range VAL_RANGE = new NIVision.Range(134, 255);	//Default value range for yellow tote
+	NIVision.Range HUE_RANGE = new NIVision.Range(101, 64);		//Default hue range for green reflection
+	NIVision.Range SAT_RANGE = new NIVision.Range(88, 255);		//Default saturation range for green reflection
+	NIVision.Range VAL_RANGE = new NIVision.Range(134, 255);	//Default value range for green reflection
 	
 	double AREA_MINIMUM = 0.5; 	//Default Area minimum for particle as a percentage of total image area
 	double LONG_RATIO = 2.22; 	//Tote long side = 26.9 / Tote height = 12.1 = 2.22
@@ -93,7 +95,7 @@ public class Vision2016
 
 		// Send particle count to dashboard
 		int numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
-		SmartDashboard.putNumber("Masked particles", numParticles);
+		Util.consoleLog("Masked particles=%d", numParticles);
 
 		// Send masked image to dashboard to assist in tweaking mask.
 		// CameraServer.getInstance().setImage(binaryFrame);
@@ -106,7 +108,7 @@ public class Vision2016
 
 		// Send particle count after filtering to dashboard
 		numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
-		SmartDashboard.putNumber("Filtered particles", numParticles);
+		Util.consoleLog("Filtered particles=%d", numParticles);
 
 		if (numParticles > 0)
 		{
@@ -132,17 +134,17 @@ public class Vision2016
 			// for the reader. Note that this scores and reports information about a single particle (single L shaped target). To get accurate information 
 			// about the location of the tote (not just the distance) you will need to correlate two adjacent targets in order to find the true center of the tote.
 			scores.Aspect = AspectScore(particles.elementAt(0));
-			SmartDashboard.putNumber("Aspect", scores.Aspect);
+			Util.consoleLog("Aspect=%f", scores.Aspect);
 			scores.Area = AreaScore(particles.elementAt(0));
-			SmartDashboard.putNumber("Area", scores.Area);
+			Util.consoleLog("Area=%f", scores.Area);
 			isTarget = scores.Aspect > SCORE_MIN && scores.Area > SCORE_MIN;
 
 			// Send distance and tote status to dashboard. The bounding rect, particularly the horizontal center (left - right) may be useful for rotating/driving towards a tote
-			SmartDashboard.putBoolean("IsTarget", isTarget);
-			SmartDashboard.putNumber("Distance", computeDistance(binaryFrame, particles.elementAt(0)));
+			Util.consoleLog("IsTarget=%b", isTarget);
+			Util.consoleLog("Distance=%f", computeDistance(binaryFrame, particles.elementAt(0)));
 		} 
 
-		SmartDashboard.putBoolean("IsTarget", false);
+		Util.consoleLog("IsTarget", false);
 		
 		return (isTarget);
 	}
