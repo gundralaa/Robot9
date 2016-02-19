@@ -58,14 +58,14 @@ public class Vision2016
 	int 	imaqError;
 
 	// Constants
-	NIVision.Range HUE_RANGE = new NIVision.Range(101, 64);		//Default hue range for green reflection
-	NIVision.Range SAT_RANGE = new NIVision.Range(88, 255);		//Default saturation range for green reflection
-	NIVision.Range VAL_RANGE = new NIVision.Range(134, 255);	//Default value range for green reflection
+	NIVision.Range HUE_RANGE = new NIVision.Range(105, 37);		//Default hue range for green reflection
+	NIVision.Range SAT_RANGE = new NIVision.Range(230, 255);	//Default saturation range for green reflection
+	NIVision.Range VAL_RANGE = new NIVision.Range(133, 183);	//Default value range for green reflection
 	
 	double AREA_MINIMUM = 0.5; 	//Default Area minimum for particle as a percentage of total image area
-	double LONG_RATIO = 2.22; 	//Tote long side = 26.9 / Tote height = 12.1 = 2.22
-	double SHORT_RATIO = 1.4; 	//Tote short side = 16.9 / Tote height = 12.1 = 1.4
-	double SCORE_MIN = 75.0;  	//Minimum score to be considered a tote
+	//double LONG_RATIO = 2.22; 	//Target long side = 26.9 / Target height = 12.1 = 2.22
+	//double SHORT_RATIO = 1.4; 	//Target short side = 16.9 / Target height = 12.1 = 1.4
+	double SCORE_MIN = 75.0;  	//Minimum score to be considered a target
 	double VIEW_ANGLE = 52; 	//View angle fo camera, set to Axis m1011 by default, 64 for m1013, 51.7 for 206, 
 								//52 for HD3000 square, 60 for HD3000 640x480
 
@@ -86,6 +86,8 @@ public class Vision2016
 	{
 		boolean isTarget = false;
 		
+		//frame = image;
+		
 		// read file in from disk. For this example to run you need to copy image.jpg from the SampleImages folder to the
 		// directory shown below using FTP or SFTP: http://wpilib.screenstepslive.com/s/4485/m/24166/l/282299-roborio-ftp
 		NIVision.imaqReadFile(frame, "/home/lvuser/SampleImages/image.jpg");
@@ -104,6 +106,7 @@ public class Vision2016
 		//float areaMin = (float) SmartDashboard.getNumber("Area min %", AREA_MINIMUM);
 		float areaMin = (float) AREA_MINIMUM;
 		criteria[0].lower = areaMin;
+		
 		imaqError = NIVision.imaqParticleFilter4(binaryFrame, binaryFrame, criteria, filterOptions, null);
 
 		// Send particle count after filtering to dashboard
@@ -139,7 +142,7 @@ public class Vision2016
 			Util.consoleLog("Area=%f", scores.Area);
 			isTarget = scores.Aspect > SCORE_MIN && scores.Area > SCORE_MIN;
 
-			// Send distance and tote status to dashboard. The bounding rect, particularly the horizontal center (left - right) may be useful for rotating/driving towards a tote
+			// Log distance and target status. The bounding rect, particularly the horizontal center (left - right) may be useful for rotating/driving towards a tote
 			Util.consoleLog("IsTarget=%b", isTarget);
 			Util.consoleLog("Distance=%f", computeDistance(binaryFrame, particles.elementAt(0)));
 		} 
@@ -170,7 +173,9 @@ public class Vision2016
 	{
 		double boundingArea = (report.BoundingRectBottom - report.BoundingRectTop) * (report.BoundingRectRight - report.BoundingRectLeft);
 		// Tape is 7" edge so 49" bounding rect. With 2" wide tape it covers 24" of the rect.
-		return ratioToScore((49 / 24) * report.Area / boundingArea);
+		//return ratioToScore((49 / 24) * report.Area / boundingArea);
+		// For 2016, the target is 20w x 12h. So bounding rect is 240". With 2" tape, I guess the coverage is 160".
+		return ratioToScore((240 / 160) * report.Area / boundingArea);
 	}
 
 	/**
@@ -187,7 +192,6 @@ public class Vision2016
 	 *
 	 * @param image The image to use for measuring the particle estimated rectangle
 	 * @param report The Particle Analysis Report for the particle
-	 * @param isLong Boolean indicating if the target is believed to be the long side of a tote
 	 * @return The estimated distance to the target in feet.
 	 */
 	private double computeDistance (Image image, ParticleReport report) 
@@ -197,7 +201,7 @@ public class Vision2016
 
 		size = NIVision.imaqGetImageSize(image);
 		normalizedWidth = 2 * (report.BoundingRectRight - report.BoundingRectLeft) / size.width;
-		targetWidth = 7;
+		targetWidth = 20;	// was 7 for 2015.
 
 		return (targetWidth / (normalizedWidth * 12 * Math.tan(VIEW_ANGLE * Math.PI / (180 * 2))));
 	}

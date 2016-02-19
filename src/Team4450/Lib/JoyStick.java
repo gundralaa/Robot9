@@ -126,7 +126,7 @@ public class JoyStick
 	{
 		Util.consoleLog(joyStickName);
 
-		monitorJoyStickThread.interrupt();
+		if (monitorJoyStickThread != null) monitorJoyStickThread.interrupt();
 		
 		monitorJoyStickThread = null;
 	}
