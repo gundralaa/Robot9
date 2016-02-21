@@ -170,10 +170,10 @@ public class Shooter
 	{
 		Util.consoleLog();
 
-		if (hoodUp)
-			HoodUp();
-		else
-			HoodDown();
+//		if (hoodUp)
+//			HoodUp();
+//		else
+//			HoodDown();
 		
 		if (autoShootThread != null) return;
 		
@@ -209,7 +209,7 @@ public class Shooter
 	    	{
 	    		ShooterMotorStart(1.0);
 
-	    		sleep(2000);
+	    		sleep(2500);
 	    		
 	    		PickupMotorIn(1.0);
 	    	

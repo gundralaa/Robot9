@@ -17,7 +17,7 @@ class Teleop
 	private JoyStick			rightStick, leftStick, utilityStick;
 	private LaunchPad			launchPad;
 	private final FestoDA		shifterValve, ptoValve;	//, valve3, valve4;
-	private boolean				ptoMode = false;
+	private boolean				ptoMode = false, invertDrive = false;
 	//private final RevDigitBoard	revBoard = new RevDigitBoard();
 	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
 	public  final Shooter		shooter;
@@ -90,11 +90,11 @@ class Teleop
         launchPad.Start();
 
 		leftStick = new JoyStick(robot.leftStick, "LeftStick", JoyStickButtonIDs.TRIGGER, this);
-        leftStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
+        //leftStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
 		leftStick.addJoyStickEventListener(new LeftStickListener());
         leftStick.Start();
         
-		rightStick = new JoyStick(robot.rightStick, "RightStick", JoyStickButtonIDs.TRIGGER, this);
+		rightStick = new JoyStick(robot.rightStick, "RightStick", JoyStickButtonIDs.TOP_LEFT, this);
         rightStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
         rightStick.addJoyStickEventListener(new RightStickListener());
         rightStick.Start();
@@ -103,6 +103,7 @@ class Teleop
 		utilityStick.AddButton(JoyStickButtonIDs.TOP_RIGHT);
 		utilityStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
 		utilityStick.AddButton(JoyStickButtonIDs.TOP_BACK);
+		utilityStick.AddButton(JoyStickButtonIDs.TRIGGER);
         utilityStick.addJoyStickEventListener(new UtilityStickListener());
         utilityStick.Start();
         
@@ -121,12 +122,17 @@ class Teleop
 				rightY = utilityStick.GetY();
 				leftY = rightY;
 			} 
+			else if (invertDrive)
+			{
+    			rightY = rightStick.GetY() * -1.0;		// fwd/back right
+    			leftY = leftStick.GetY() * -1.0;		// fwd/back left
+			}
 			else
 			{
-    			rightY = rightStick.GetY();		// fwd/back right
+				rightY = rightStick.GetY();		// fwd/back right
     			leftY = leftStick.GetY();		// fwd/back left
 			}
-
+			
 			LCD.printLine(4, "leftY=%.4f  rightY=%.4f", leftY, rightY);
 
 			// This corrects stick alignment error when trying to drive straight. 
@@ -272,9 +278,6 @@ class Teleop
 				else
 					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam1);			
 			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
-				shooter.StartAutoShoot(true);
-			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
 				shooter.StopAutoShoot();
 	    }
@@ -295,10 +298,7 @@ class Teleop
 			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
-				shooter.StartAutoPickup();
-			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
-				shooter.StopAutoPickup();
+				invertDrive = joyStickEvent.button.latchedState;
 	    }
 
 	    public void ButtonUp(JoyStickEvent joyStickEvent) 
@@ -315,17 +315,18 @@ class Teleop
 	    {
 			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
 			
-			// Change which USB camera is being served by the RoboRio when using dual usb cameras.
-			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_LEFT))
-				if (joyStickEvent.button.latchedState)
-					shooter.ShooterMotorStart(1);
-				else
-					shooter.ShooterMotorStop();
+			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
+				shooter.StartAutoShoot(false);
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_RIGHT))
 				if (joyStickEvent.button.latchedState)
-					shooter.ShooterMotorStart(-1);
+					shooter.StartAutoPickup();
+				else
+					shooter.StopAutoPickup();
+					
+			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_LEFT))
+				if (joyStickEvent.button.latchedState)
+					shooter.ShooterMotorStart(1);
 				else
 					shooter.ShooterMotorStop();
 			
