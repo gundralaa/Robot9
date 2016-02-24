@@ -4,11 +4,13 @@ package Team4450.Robot9;
 import java.lang.Math;
 
 import Team4450.Lib.*;
-import Team4450.Lib.JoyStick.JoyStickButtonIDs;
 import Team4450.Lib.JoyStick.*;
 import Team4450.Lib.LaunchPad.*;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 class Teleop
@@ -16,12 +18,19 @@ class Teleop
 	private final Robot 		robot;
 	private JoyStick			rightStick, leftStick, utilityStick;
 	private LaunchPad			launchPad;
-	private final FestoDA		shifterValve, ptoValve;	//, valve3, valve4;
+	private final FestoDA		shifterValve = new FestoDA(2);
+	private final FestoDA		ptoValve = new FestoDA(0);
+	private final FestoDA		tiltValve = new FestoDA(1, 0);
 	private boolean				ptoMode = false, invertDrive = false;
 	//private final RevDigitBoard	revBoard = new RevDigitBoard();
 	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
 	public  final Shooter		shooter;
+	private final Talon			armMotor;
+	private final DigitalInput	climbUpSwitch = new DigitalInput(3);
 	
+	// encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
+	private Encoder				encoder = new Encoder(1, 2, true, EncodingType.k4X);
+
 	// Constructor.
 	
 	Teleop(Robot robot)
@@ -30,12 +39,8 @@ class Teleop
 
 		this.robot = robot;
 		
-		shifterValve = new FestoDA(2);
-		ptoValve = new FestoDA(0);
+		armMotor = new Talon(2);
 		shooter = new Shooter(robot);
-		
-		//valve3 = new FestoDA(4);
-		//valve4 = new FestoDA(6);
 	}
 
 	// Free all objects that need it.
@@ -50,16 +55,18 @@ class Teleop
 		if (launchPad != null) launchPad.dispose();
 		if (shifterValve != null) shifterValve.dispose();
 		if (ptoValve != null) ptoValve.dispose();
+		if (tiltValve != null) tiltValve.dispose();
 		if (shooter != null) shooter.dispose();
-		//if (valve3 != null) valve3.dispose();
-		//if (valve4 != null) valve4.dispose();
+		if (armMotor != null) armMotor.free();
+		if (climbUpSwitch != null) climbUpSwitch.free();
+		if (encoder != null) encoder.free();
 		//if (revBoard != null) revBoard.dispose();
 		//if (hallEffectSensor != null) hallEffectSensor.free();
 	}
 
 	void OperatorControl()
 	{
-		double	rightY, leftY;
+		double	rightY, leftY, utilY;
         
         // Motor safety turned off during initialization.
         robot.robotDrive.setSafetyEnabled(false);
@@ -73,9 +80,7 @@ class Teleop
 
 		shifterLow();
 		ptoDisable();
-		
-		//valve3.SetA();
-		//valve4.SetA();
+		tiltUp();
 		
 		// Configure LaunchPad and Joystick event handlers.
 		
@@ -96,6 +101,7 @@ class Teleop
         
 		rightStick = new JoyStick(robot.rightStick, "RightStick", JoyStickButtonIDs.TOP_LEFT, this);
         rightStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
+		rightStick.AddButton(JoyStickButtonIDs.TRIGGER);
         rightStick.addJoyStickEventListener(new RightStickListener());
         rightStick.Start();
         
@@ -114,33 +120,44 @@ class Teleop
 
 		while (robot.isEnabled() && robot.isOperatorControl())
 		{
-			// Get joystick deflection and feed to robot drive object.
+			// Get joystick deflection and feed to robot drive object
 			// using calls to our JoyStick class.
 
 			if (ptoMode)
 			{
 				rightY = utilityStick.GetY();
+				
+				if (rightY > 0 && climbUpSwitch.get()) rightY = 0;
+
 				leftY = rightY;
+				utilY = 0;
 			} 
 			else if (invertDrive)
 			{
     			rightY = rightStick.GetY() * -1.0;		// fwd/back right
     			leftY = leftStick.GetY() * -1.0;		// fwd/back left
+    			utilY = utilityStick.GetY();
 			}
 			else
 			{
-				rightY = rightStick.GetY();		// fwd/back right
-    			leftY = leftStick.GetY();		// fwd/back left
+				rightY = rightStick.GetY();				// fwd/back right
+    			leftY = leftStick.GetY();				// fwd/back left
+    			utilY = utilityStick.GetY();
 			}
 			
-			LCD.printLine(4, "leftY=%.4f  rightY=%.4f", leftY, rightY);
+			LCD.printLine(3, "encoder=%d  climbUp=%b", encoder.get(), climbUpSwitch.get());
+			LCD.printLine(4, "leftY=%.4f  rightY=%.4f  utilY=%.4f", leftY, rightY, utilY);
 
 			// This corrects stick alignment error when trying to drive straight. 
-			if (Math.abs(rightY - leftY) < 0.2) rightY = leftY;
+			//if (Math.abs(rightY - leftY) < 0.2) rightY = leftY;
 			
-			// Set motors.
+			// Set wheel motors.
 
 			robot.robotDrive.tankDrive(leftY, rightY);
+
+			// Set motor for utility arm.
+			
+			armMotor.set(utilY);
 
 			// End of driving loop.
 			
@@ -196,6 +213,20 @@ class Teleop
 		SmartDashboard.putBoolean("PTO", true);
 	}
 
+	void tiltUp()
+	{
+		Util.consoleLog();
+		
+		tiltValve.SetA();
+	}
+
+	void tiltDown()
+	{
+		Util.consoleLog();
+		
+		tiltValve.SetB();
+	}
+	
 	// Handle LaunchPad control events.
 	
 	public class LaunchPadListener implements LaunchPadEventListener 
@@ -204,18 +235,11 @@ class Teleop
 	    {
 			Util.consoleLog("%s, latchedState=%b", launchPadEvent.control.id.name(),  launchPadEvent.control.latchedState);
 			
-			// Change which USB camera is being served by the RoboRio when using dual usb cameras.
-			
-			if (launchPadEvent.control.id.equals(LaunchPad.LaunchPadControlIDs.BUTTON_BLACK))
+			if (launchPadEvent.control.id.equals(LaunchPad.LaunchPadControlIDs.BUTTON_YELLOW))
 				if (launchPadEvent.control.latchedState)
 					shooter.HoodUp();
 				else
 					shooter.HoodDown();
-			
-//				if (launchPadEvent.control.latchedState)
-//					robot.cameraThread.ChangeCamera(robot.cameraThread.cam2);
-//				else
-//					robot.cameraThread.ChangeCamera(robot.cameraThread.cam1);
 			
 			if (launchPadEvent.control.id.equals(LaunchPad.LaunchPadControlIDs.BUTTON_RED))
 				if (launchPadEvent.control.latchedState)
@@ -231,7 +255,15 @@ class Teleop
     				shifterLow();
 			}
 
-			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_YELLOW)
+			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_GREEN)
+			{
+				if (launchPadEvent.control.latchedState)
+    				tiltDown();
+    			else
+    				tiltUp();
+			}
+
+			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE)
 			{
 				if (launchPadEvent.control.latchedState)
 				{
@@ -266,6 +298,7 @@ class Teleop
 	
 	private class RightStickListener implements JoyStickEventListener 
 	{
+		
 	    public void ButtonDown(JoyStickEvent joyStickEvent) 
 	    {
 			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
@@ -280,6 +313,9 @@ class Teleop
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
 				shooter.StopAutoShoot();
+			
+			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
+				invertDrive = joyStickEvent.button.latchedState;
 	    }
 
 	    public void ButtonUp(JoyStickEvent joyStickEvent) 
@@ -290,7 +326,6 @@ class Teleop
 
 	// Handle Left JoyStick Button events.
 	
-	@SuppressWarnings("unused")
 	private class LeftStickListener implements JoyStickEventListener 
 	{
 	    public void ButtonDown(JoyStickEvent joyStickEvent) 
@@ -298,7 +333,12 @@ class Teleop
 			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
-				invertDrive = joyStickEvent.button.latchedState;
+			{
+				if (joyStickEvent.button.latchedState)
+    				shifterHigh();
+    			else
+    				shifterLow();
+			}
 	    }
 
 	    public void ButtonUp(JoyStickEvent joyStickEvent) 
@@ -341,11 +381,6 @@ class Teleop
 					shooter.PickupMotorOut(1);
 				else
 					shooter.PickupMotorStop();
-					
-//				if (joyStickEvent.button.latchedState)
-//					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam2);
-//				else
-//					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam1);
 	    }
 
 	    public void ButtonUp(JoyStickEvent joyStickEvent) 
