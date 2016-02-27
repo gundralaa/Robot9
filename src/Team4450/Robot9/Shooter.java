@@ -2,6 +2,7 @@ package Team4450.Robot9;
 
 import Team4450.Lib.*;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.DigitalInput;
 
@@ -9,22 +10,32 @@ public class Shooter
 {
 	private final Robot	robot;
 	
-	private final CANTalon		pickupMotor = new CANTalon(7);
-	private final Talon			shooterMotor1 = new Talon(0);
-	private final Talon			shooterMotor2 = new Talon(1);
-	private final FestoDA		pickupCylinder = new FestoDA(6);
-	private final FestoDA		hoodCylinder = new FestoDA(4);
-	private final DigitalInput	pickupSwitch = new DigitalInput(0);
+	//private final CANTalon		pickupMotor = new CANTalon(7);
+	private final SpeedController	pickupMotor;
+	private final Talon				shooterMotor1 = new Talon(0);
+	private final Talon				shooterMotor2 = new Talon(1);
+	private final FestoDA			pickupCylinder = new FestoDA(6);
+	private final FestoDA			hoodCylinder = new FestoDA(4);
+	private final DigitalInput		pickupSwitch = new DigitalInput(0);
 	
-	private Thread				autoPickupThread, autoShootThread;
+	private Thread					autoPickupThread, autoShootThread;
 
 	Shooter(Robot robot)
 	{
 		Util.consoleLog();
 		
 		this.robot = robot;
+
+		// Handle the fact that the pickup motor is a CANTalon on competition robot
+		// and a pwm Talon on clone.
 		
-		this.robot.InitializeCANTalon(pickupMotor);
+		if (robot.robotProperties.getProperty("RobotId").equals("comp")) 
+		{
+			pickupMotor = new CANTalon(7);
+			robot.InitializeCANTalon((CANTalon) pickupMotor);
+		}
+		else
+			pickupMotor = new Talon(7);
 		
 		PickupArmUp();
 		HoodDown();
@@ -36,8 +47,15 @@ public class Shooter
 		
 		if (autoPickupThread != null) autoPickupThread.interrupt();
 		if (autoShootThread != null) autoShootThread.interrupt();
+
+		if (pickupMotor != null)
+		{
+			if (robot.robotProperties.getProperty("RobotId").equals("comp"))
+				((CANTalon) pickupMotor).delete();
+			else
+				((Talon) pickupMotor).free();
+		}
 		
-		if (pickupMotor != null) pickupMotor.delete();
 		if (shooterMotor1 != null) shooterMotor1.free();
 		if (shooterMotor2 != null) shooterMotor2.free();
 		if (pickupCylinder != null) pickupCylinder.dispose();

@@ -44,7 +44,7 @@ public class FestoDA
 	}
 
 	/**
-	 * @param canId PCM CAN Id number.
+	 * @param pcmCanId PCM CAN Id number.
 	 * @param port PCM port wired to open/A side of valve. Close/B side is wired to PCM next port.
 	 */
 

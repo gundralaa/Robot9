@@ -113,6 +113,9 @@ class Teleop
         utilityStick.addJoyStickEventListener(new UtilityStickListener());
         utilityStick.Start();
         
+        // Set gyro to heading 0.
+        robot.gyro.reset();
+        
         // Motor safety turned on.
         robot.robotDrive.setSafetyEnabled(true);
         
@@ -147,6 +150,7 @@ class Teleop
 			
 			LCD.printLine(3, "encoder=%d  climbUp=%b", encoder.get(), climbUpSwitch.get());
 			LCD.printLine(4, "leftY=%.4f  rightY=%.4f  utilY=%.4f", leftY, rightY, utilY);
+			LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
 
 			// This corrects stick alignment error when trying to drive straight. 
 			//if (Math.abs(rightY - leftY) < 0.2) rightY = leftY;
