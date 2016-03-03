@@ -69,49 +69,49 @@ public class Shooter
 		
 		pickupCylinder.SetA();
 	}
-
+	//---------------------------------------
 	public void PickupArmDown()
 	{
 		Util.consoleLog();
 		
 		pickupCylinder.SetB();
 	}
-
+	//---------------------------------------
 	public void HoodDown()
 	{
 		Util.consoleLog();
 		
 		hoodCylinder.SetB();
 	}
-
+	//----------------------------------------
 	public void HoodUp()
 	{
 		Util.consoleLog();
 		
 		hoodCylinder.SetA();
 	}
-	
+	//----------------------------------------
 	public void PickupMotorIn(double speed)
 	{
 		Util.consoleLog("%f", speed);
 
 		pickupMotor.set(speed);
 	}
-	
+	//----------------------------------------
 	public void PickupMotorOut(double speed)
 	{
 		Util.consoleLog("%f", speed);
 		
 		pickupMotor.set(Math.abs(speed) * -1);
 	}
-	
+	//----------------------------------------
 	public void PickupMotorStop()
 	{
 		Util.consoleLog();
 		
 		pickupMotor.set(0);
 	}
-	
+	//----------------------------------------
 	public void ShooterMotorStart(double speed)
 	{
 		Util.consoleLog("%f", speed);
@@ -119,7 +119,7 @@ public class Shooter
 		shooterMotor1.set(speed);
 		shooterMotor2.set(speed);
 	}
-	
+	//----------------------------------------
 	public void ShooterMotorStop()
 	{
 		Util.consoleLog();
@@ -127,7 +127,7 @@ public class Shooter
 		shooterMotor1.set(0);
 		shooterMotor2.set(0);
 	}
-	
+	//----------------------------------------
 	public void StartAutoPickup()
 	{
 		Util.consoleLog();
@@ -137,7 +137,7 @@ public class Shooter
 		autoPickupThread = new AutoPickup();
 		autoPickupThread.start();
 	}
-
+	//----------------------------------------
 	public void StopAutoPickup()
 	{
 		Util.consoleLog();
@@ -165,6 +165,7 @@ public class Shooter
 	    	try
 	    	{
 	    		PickupArmDown();
+	    		sleep(250);
 	    		PickupMotorIn(1.0);
 	    		
     	    	while (!isInterrupted() && !pickupSwitch.get())
@@ -225,9 +226,9 @@ public class Shooter
 	    	
 	    	try
 	    	{
-	    		ShooterMotorStart(1.0);
+	    		//ShooterMotorStart(1.0);
 
-	    		sleep(2500);
+	    		//sleep(2500);
 	    		
 	    		PickupMotorIn(1.0);
 	    	

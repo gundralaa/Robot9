@@ -21,11 +21,12 @@ class Teleop
 	private final FestoDA		shifterValve = new FestoDA(2);
 	private final FestoDA		ptoValve = new FestoDA(0);
 	private final FestoDA		tiltValve = new FestoDA(1, 0);
+	private final FestoDA		armsValve = new FestoDA(1, 2);
 	private boolean				ptoMode = false, invertDrive = false;
 	//private final RevDigitBoard	revBoard = new RevDigitBoard();
 	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
 	public  final Shooter		shooter;
-	private final Talon			armMotor;
+	//private final Talon			armMotor;
 	private final DigitalInput	climbUpSwitch = new DigitalInput(3);
 	
 	// encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
@@ -39,7 +40,7 @@ class Teleop
 
 		this.robot = robot;
 		
-		armMotor = new Talon(2);
+		//armMotor = new Talon(2);
 		shooter = new Shooter(robot);
 	}
 
@@ -56,8 +57,9 @@ class Teleop
 		if (shifterValve != null) shifterValve.dispose();
 		if (ptoValve != null) ptoValve.dispose();
 		if (tiltValve != null) tiltValve.dispose();
+		if (armsValve != null) armsValve.dispose();
 		if (shooter != null) shooter.dispose();
-		if (armMotor != null) armMotor.free();
+		//if (armMotor != null) armMotor.free();
 		if (climbUpSwitch != null) climbUpSwitch.free();
 		if (encoder != null) encoder.free();
 		//if (revBoard != null) revBoard.dispose();
@@ -81,6 +83,7 @@ class Teleop
 		shifterLow();
 		ptoDisable();
 		tiltUp();
+		armsUp();
 		
 		// Configure LaunchPad and Joystick event handlers.
 		
@@ -95,7 +98,7 @@ class Teleop
         launchPad.Start();
 
 		leftStick = new JoyStick(robot.leftStick, "LeftStick", JoyStickButtonIDs.TRIGGER, this);
-        //leftStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
+        leftStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
 		leftStick.addJoyStickEventListener(new LeftStickListener());
         leftStick.Start();
         
@@ -133,23 +136,20 @@ class Teleop
 				if (rightY > 0 && climbUpSwitch.get()) rightY = 0;
 
 				leftY = rightY;
-				utilY = 0;
 			} 
 			else if (invertDrive)
 			{
     			rightY = rightStick.GetY() * -1.0;		// fwd/back right
     			leftY = leftStick.GetY() * -1.0;		// fwd/back left
-    			utilY = utilityStick.GetY();
 			}
 			else
 			{
 				rightY = rightStick.GetY();				// fwd/back right
     			leftY = leftStick.GetY();				// fwd/back left
-    			utilY = utilityStick.GetY();
 			}
 			
 			LCD.printLine(3, "encoder=%d  climbUp=%b", encoder.get(), climbUpSwitch.get());
-			LCD.printLine(4, "leftY=%.4f  rightY=%.4f  utilY=%.4f", leftY, rightY, utilY);
+			LCD.printLine(4, "leftY=%.4f  rightY=%.4f", leftY, rightY);
 			LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
 
 			// This corrects stick alignment error when trying to drive straight. 
@@ -158,10 +158,6 @@ class Teleop
 			// Set wheel motors.
 
 			robot.robotDrive.tankDrive(leftY, rightY);
-
-			// Set motor for utility arm.
-			
-			armMotor.set(utilY);
 
 			// End of driving loop.
 			
@@ -184,7 +180,7 @@ class Teleop
 		SmartDashboard.putBoolean("Low", true);
 		SmartDashboard.putBoolean("High", false);
 	}
-
+	//--------------------------------------
 	void shifterHigh()
 	{
 		Util.consoleLog();
@@ -194,7 +190,7 @@ class Teleop
 		SmartDashboard.putBoolean("Low", false);
 		SmartDashboard.putBoolean("High", true);
 	}
-
+	//--------------------------------------
 	void ptoDisable()
 	{
 		Util.consoleLog();
@@ -205,7 +201,7 @@ class Teleop
 
 		SmartDashboard.putBoolean("PTO", false);
 	}
-
+	//--------------------------------------
 	void ptoEnable()
 	{
 		Util.consoleLog();
@@ -216,7 +212,7 @@ class Teleop
 		
 		SmartDashboard.putBoolean("PTO", true);
 	}
-
+	//--------------------------------------
 	void tiltUp()
 	{
 		Util.consoleLog();
@@ -229,6 +225,20 @@ class Teleop
 		Util.consoleLog();
 		
 		tiltValve.SetB();
+	}
+	//--------------------------------------
+	void armsUp()
+	{
+		Util.consoleLog();
+		
+		armsValve.SetB();
+	}
+
+	void armsDown()
+	{
+		Util.consoleLog();
+		
+		armsValve.SetA();
 	}
 	
 	// Handle LaunchPad control events.
@@ -342,6 +352,14 @@ class Teleop
     				shifterHigh();
     			else
     				shifterLow();
+			}
+			
+			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
+			{
+				if (joyStickEvent.button.latchedState)
+    				armsDown();
+    			else
+    				armsUp();
 			}
 	    }
 

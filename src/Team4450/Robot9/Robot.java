@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-02.27.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-03.02.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -46,7 +46,9 @@ public class Robot extends SampleRobot
   final AnalogGyro		gyro = new AnalogGyro(0);		// gyro must be plugged into analog port 0 or 1.
 
   public Properties		robotProperties;
-	
+  
+  PowerDistributionPanel PDP;
+  
   //AxisCamera			camera = null;
   CameraServer			usbCameraServer = null;
 
@@ -56,7 +58,7 @@ public class Robot extends SampleRobot
   int                       location;
     
   Thread               	monitorBatteryThread, monitorDistanceThread, monitorCompressorThread;
-  public CameraFeed		cameraThread;
+  CameraFeed			cameraThread;
     
   static final String  	CAMERA_IP = "10.44.50.11";
   static final int	   	USB_CAMERA = 2;
@@ -116,7 +118,7 @@ public class Robot extends SampleRobot
 
    		// Reset PDB sticky faults.
       
-   		PowerDistributionPanel PDP = new PowerDistributionPanel();
+   		PDP = new PowerDistributionPanel();
    		PDP.clearStickyFaults();
 
    		// Configure motor controllers and RobotDrive.
@@ -142,6 +144,7 @@ public class Robot extends SampleRobot
      
         // calibrate the gyro.
         
+        gyro.initGyro();
         gyro.calibrate();
         
    		// Set starting camera feed on driver station to USB-HW.
@@ -220,6 +223,8 @@ public class Robot extends SampleRobot
 
     	  // This code turns off the automatic compressor management if requested by DS.
     	  compressor.setClosedLoopControl(SmartDashboard.getBoolean("CompressorEnabled", true));
+
+    	  PDP.clearStickyFaults();
              
     	  // Start autonomous process contained in the MyAutonomous class.
         
@@ -251,7 +256,9 @@ public class Robot extends SampleRobot
       	  location = ds.getLocation();
         
           Util.consoleLog("Alliance=%s, Location=%d, FMS=%b", alliance.name(), location, ds.isFMSAttached());
-        
+
+          PDP.clearStickyFaults();
+
           // This code turns off the automatic compressor management if requested by DS.
           compressor.setClosedLoopControl(SmartDashboard.getBoolean("CompressorEnabled", true));
         
@@ -318,11 +325,17 @@ public class Robot extends SampleRobot
 	  Util.consoleLog();
 
 	  LFPwmTalon = new Talon(3);
+	  Util.consoleLog();
 	  LRPwmTalon = new Talon(4);
+	  Util.consoleLog();
 	  RFPwmTalon = new Talon(5);
+	  Util.consoleLog();
 	  RRPwmTalon = new Talon(6);
+	  Util.consoleLog();
 	  
 	  robotDrive = new RobotDrive(LFPwmTalon, LRPwmTalon, RFPwmTalon, RRPwmTalon);
+	  
+	  Util.consoleLog("end");
   }
   
   // Initialize and Log status indication from CANTalon. If we see an exception
