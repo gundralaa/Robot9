@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-03.02.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-03.05.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -144,8 +144,8 @@ public class Robot extends SampleRobot
      
         // calibrate the gyro.
         
-        gyro.initGyro();
-        gyro.calibrate();
+        //gyro.initGyro();
+        //gyro.calibrate();
         
    		// Set starting camera feed on driver station to USB-HW.
       

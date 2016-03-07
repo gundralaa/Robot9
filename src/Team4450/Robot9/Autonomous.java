@@ -44,10 +44,13 @@ public class Autonomous
 
 		switch (program)
 		{
-			case 0:		// Drive forward to defense and stop.
-				robot.robotDrive.tankDrive(-.66, -.60);
+			case 0:		// No auto program.
+				break;
 				
-				while (robot.isAutonomous() && Math.abs(encoder.get()) < 250) 
+			case 1:		// Drive forward to defense and stop.
+				robot.robotDrive.tankDrive(-.64, -.60);
+				
+				while (robot.isAutonomous() && Math.abs(encoder.get()) < 350) 
 				{
 					LCD.printLine(3, "encoder=%d", encoder.get());
 					LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
@@ -57,10 +60,19 @@ public class Autonomous
 				robot.robotDrive.tankDrive(0, 0, true);				
 				break;
 
-			case 1:		// Drive forward to and cross the rough ground then stop.
-				robot.robotDrive.tankDrive(-.96, -.90);
+			case 2:		// Drive forward to and cross the rough ground then stop.
+				robot.robotDrive.tankDrive(-.64, -.60);
 				
-				while (robot.isAutonomous() && Math.abs(encoder.get()) < 1500) 
+				while (robot.isAutonomous() && Math.abs(encoder.get()) < 350) 
+				{
+					LCD.printLine(3, "encoder=%d", encoder.get());
+					LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
+					Timer.delay(.020);
+				}
+
+				robot.robotDrive.tankDrive(-.94, -.90);
+				
+				while (robot.isAutonomous() && Math.abs(encoder.get()) < 400)	// 1600 
 				{
 					LCD.printLine(3, "encoder=%d", encoder.get());
 					LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
@@ -70,7 +82,7 @@ public class Autonomous
 				robot.robotDrive.tankDrive(0, 0, true);				
 				break;
 
-			case 2:		// Drive forward to test gyro then stop.
+			case 3:		// Drive forward to test gyro then stop.
 				double left = -.60, right = -.60, gain = 1.0;
 				
 				while (robot.isAutonomous() && Math.abs(encoder.get()) < 3000) 
