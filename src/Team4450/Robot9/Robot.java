@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-03.05.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-03.09.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -197,6 +197,9 @@ public class Robot extends SampleRobot
 		  SmartDashboard.putBoolean("Teleop Mode", false);
 		  SmartDashboard.putBoolean("PTO", false);
 		  SmartDashboard.putBoolean("FMS", ds.isFMSAttached());
+		  SmartDashboard.putBoolean("ShooterMotor", false);
+		  SmartDashboard.putBoolean("PickupMotor", false);
+		  SmartDashboard.putBoolean("Light", false);
 
 		  Util.consoleLog("end");
 	  }
@@ -318,6 +321,9 @@ public class Robot extends SampleRobot
 
       RSlaveCanTalon.changeControlMode(TalonControlMode.Follower);
       RSlaveCanTalon.set(RFCanTalon.getDeviceID());
+      
+      // Turn on brake mode for CAN Talons.
+      SetCANTalonNeutral(true);
   }
 
   private void InitializePWMTalonDrive()
@@ -348,5 +354,19 @@ public class Robot extends SampleRobot
 	  talon.clearStickyFaults();
 	  talon.enableControl();
 	  talon.changeControlMode(TalonControlMode.PercentVbus);
+  }
+  
+  // Set neutral behavior of CAN Talons. True = brake mode, false = coast mode.
+
+  public void SetCANTalonNeutral(boolean brakeMode)
+  {
+	  Util.consoleLog("brakes on=%b", brakeMode);
+	  
+	  LFCanTalon.enableBrakeMode(brakeMode);
+	  LRCanTalon.enableBrakeMode(brakeMode);
+	  RFCanTalon.enableBrakeMode(brakeMode);
+	  RRCanTalon.enableBrakeMode(brakeMode);
+	  LSlaveCanTalon.enableBrakeMode(brakeMode);
+	  RSlaveCanTalon.enableBrakeMode(brakeMode);
   }
 }

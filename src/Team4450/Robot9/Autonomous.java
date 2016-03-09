@@ -61,6 +61,19 @@ public class Autonomous
 				break;
 
 			case 2:		// Drive forward to and cross the rough ground then stop.
+				robot.robotDrive.tankDrive(-.94, -.90);
+				
+				while (robot.isAutonomous() && Math.abs(encoder.get()) < 1600)	 
+				{
+					LCD.printLine(3, "encoder=%d", encoder.get());
+					LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
+					Timer.delay(.020);
+				}
+
+				robot.robotDrive.tankDrive(0, 0, true);				
+				break;
+
+			case 3:		// Drive forward to and cross the rock wall then stop.
 				robot.robotDrive.tankDrive(-.64, -.60);
 				
 				while (robot.isAutonomous() && Math.abs(encoder.get()) < 350) 
@@ -82,7 +95,17 @@ public class Autonomous
 				robot.robotDrive.tankDrive(0, 0, true);				
 				break;
 
-			case 3:		// Drive forward to test gyro then stop.
+			case 4:		// Auto shoot from spybot position.
+				Shooter shoot = new Shooter(robot);
+				
+				shoot.StartShoot(true);
+				
+				Timer.delay(4000);
+				
+				shoot.dispose();
+				break;
+				
+			case 5:		// Drive forward to test gyro then stop.
 				double left = -.60, right = -.60, gain = 1.0;
 				
 				while (robot.isAutonomous() && Math.abs(encoder.get()) < 3000) 

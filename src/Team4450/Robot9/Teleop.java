@@ -305,6 +305,12 @@ class Teleop
 					robot.cameraThread.ChangeCamera(robot.cameraThread.cam2);
 				else
 					robot.cameraThread.ChangeCamera(robot.cameraThread.cam1);
+			
+			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_LEFT_BACK))
+				if (launchPadEvent.control.latchedState)
+					robot.SetCANTalonNeutral(false);	// coast
+				else
+					robot.SetCANTalonNeutral(true);		// brake
 	    }
 	}
 
@@ -378,7 +384,7 @@ class Teleop
 			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
-				shooter.StartAutoShoot(false);
+				shooter.StartShoot(false);
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_RIGHT))
 				if (joyStickEvent.button.latchedState)

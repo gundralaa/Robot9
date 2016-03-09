@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Shooter
 {
@@ -18,7 +19,7 @@ public class Shooter
 	private final FestoDA			hoodCylinder = new FestoDA(4);
 	private final DigitalInput		pickupSwitch = new DigitalInput(0);
 	
-	private Thread					autoPickupThread, autoShootThread;
+	private Thread					autoPickupThread, shootThread;
 
 	Shooter(Robot robot)
 	{
@@ -46,7 +47,7 @@ public class Shooter
 		Util.consoleLog();
 		
 		if (autoPickupThread != null) autoPickupThread.interrupt();
-		if (autoShootThread != null) autoShootThread.interrupt();
+		if (shootThread != null) shootThread.interrupt();
 
 		if (pickupMotor != null)
 		{
@@ -103,6 +104,7 @@ public class Shooter
 		Util.consoleLog("%f", speed);
 		
 		pickupMotor.set(Math.abs(speed) * -1);
+		SmartDashboard.putBoolean("PickupMotor", true);
 	}
 	//----------------------------------------
 	public void PickupMotorStop()
@@ -110,6 +112,7 @@ public class Shooter
 		Util.consoleLog();
 		
 		pickupMotor.set(0);
+		SmartDashboard.putBoolean("PickupMotor", false);
 	}
 	//----------------------------------------
 	public void ShooterMotorStart(double speed)
@@ -118,6 +121,7 @@ public class Shooter
 	
 		shooterMotor1.set(speed);
 		shooterMotor2.set(speed);
+		SmartDashboard.putBoolean("ShooterMotor", true);
 	}
 	//----------------------------------------
 	public void ShooterMotorStop()
@@ -126,6 +130,7 @@ public class Shooter
 		
 		shooterMotor1.set(0);
 		shooterMotor2.set(0);
+		SmartDashboard.putBoolean("ShooterMotor", false);
 	}
 	//----------------------------------------
 	public void StartAutoPickup()
@@ -184,7 +189,7 @@ public class Shooter
 			autoPickupThread = null;
 	    }
 	}	// end of AutoPickup thread class.
-	
+	//----------------------------------------
 	public void StartAutoShoot(boolean hoodUp)
 	{
 		Util.consoleLog();
@@ -194,31 +199,58 @@ public class Shooter
 //		else
 //			HoodDown();
 		
-		if (autoShootThread != null) return;
+		if (shootThread != null) return;
 		
-		autoShootThread = new AutoShoot();
-		autoShootThread.start();
+		shootThread = new Shoot(true);
+		shootThread.start();
 	}
-
+	//----------------------------------------
 	public void StopAutoShoot()
 	{
 		Util.consoleLog();
 
-		if (autoShootThread != null) autoShootThread.interrupt();
+		if (shootThread != null) shootThread.interrupt();
 		
-		autoShootThread = null;
+		shootThread = null;
+	}
+	//----------------------------------------
+	public void StartShoot(boolean hoodUp)
+	{
+		Util.consoleLog();
+
+//		if (hoodUp)
+//			HoodUp();
+//		else
+//			HoodDown();
+		
+		if (shootThread != null) return;
+		
+		shootThread = new Shoot(false);
+		shootThread.start();
+	}
+	//----------------------------------------
+	public void StopShoot()
+	{
+		Util.consoleLog();
+
+		if (shootThread != null) shootThread.interrupt();
+		
+		shootThread = null;
 	}
 
-	// Automatic ball shooting thread.
+	// Ball shooting thread.
 	
-	private class AutoShoot extends Thread
+	private class Shoot extends Thread
 	{
-		AutoShoot()
+		boolean		spinUpMotors;
+		
+		Shoot(boolean spinUpMotors)
 		{
 			Util.consoleLog();
 			
-			this.setName("AutoShoot");
-	    }
+			this.setName("Shoot");
+			this.spinUpMotors = spinUpMotors;
+		}
 		
 	    public void run()
 	    {
@@ -226,9 +258,12 @@ public class Shooter
 	    	
 	    	try
 	    	{
-	    		//ShooterMotorStart(1.0);
+	    		if (spinUpMotors)
+	    		{
+	    			ShooterMotorStart(1.0);
 
-	    		//sleep(2500);
+	    			sleep(2500);
+	    		}
 	    		
 	    		PickupMotorIn(1.0);
 	    	
@@ -240,7 +275,7 @@ public class Shooter
 	    	PickupMotorStop();
     		ShooterMotorStop();
     		
-    		autoShootThread = null;
+    		shootThread = null;
 	    }
-	}	// end of AutoShoot thread class.
+	}	// end of Shoot thread class.
 }
