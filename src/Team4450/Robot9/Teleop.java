@@ -90,6 +90,8 @@ class Teleop
 		launchPad = new LaunchPad(robot.launchPad, LaunchPadControlIDs.BUTTON_BLACK, this);
 		LaunchPadControl lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_LEFT_FRONT);
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
+		lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_LEFT_BACK);
+		lpControl.controlType = LaunchPadControlTypes.SWITCH;
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_YELLOW);
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_BLUE);
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_GREEN);

@@ -331,13 +331,9 @@ public class Robot extends SampleRobot
 	  Util.consoleLog();
 
 	  LFPwmTalon = new Talon(3);
-	  Util.consoleLog();
 	  LRPwmTalon = new Talon(4);
-	  Util.consoleLog();
 	  RFPwmTalon = new Talon(5);
-	  Util.consoleLog();
 	  RRPwmTalon = new Talon(6);
-	  Util.consoleLog();
 	  
 	  robotDrive = new RobotDrive(LFPwmTalon, LRPwmTalon, RFPwmTalon, RRPwmTalon);
 	  
@@ -368,5 +364,32 @@ public class Robot extends SampleRobot
 	  RRCanTalon.enableBrakeMode(brakeMode);
 	  LSlaveCanTalon.enableBrakeMode(brakeMode);
 	  RSlaveCanTalon.enableBrakeMode(brakeMode);
+  }
+  
+  // Set CAN Talon voltage ramp rate. Rate is volts/sec and can be 2-12v.
+  
+  public void SetCANTalonRampRate(double rate)
+  {
+	  Util.consoleLog("%f", rate);
+	  
+	  LFCanTalon.setVoltageRampRate(rate);
+	  LRCanTalon.setVoltageRampRate(rate);
+	  RFCanTalon.setVoltageRampRate(rate);
+	  RRCanTalon.setVoltageRampRate(rate);
+	  LSlaveCanTalon.setVoltageRampRate(rate);
+	  RSlaveCanTalon.setVoltageRampRate(rate);
+  }
+  
+  // Return voltage and current draw for each CAN Talon.
+  
+  public String GetCANTalonStatus()
+  {
+	  return String.format("%.1f/%.1f  %.1f/%.1f  %.1f/%.1f  %.1f/%.1f  %.1f/%.1f  %.1f/%.1f", 
+			  LFCanTalon.getOutputVoltage(), LFCanTalon.getOutputCurrent(),
+			  LRCanTalon.getOutputVoltage(), LRCanTalon.getOutputCurrent(),
+			  RFCanTalon.getOutputVoltage(), RFCanTalon.getOutputCurrent(),
+			  RRCanTalon.getOutputVoltage(), RRCanTalon.getOutputCurrent(),
+			  LSlaveCanTalon.getOutputVoltage(), LSlaveCanTalon.getOutputCurrent(),
+			  RSlaveCanTalon.getOutputVoltage(), RSlaveCanTalon.getOutputCurrent());
   }
 }
