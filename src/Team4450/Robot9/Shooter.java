@@ -195,42 +195,32 @@ public class Shooter
 	    }
 	}	// end of AutoPickup thread class.
 	//----------------------------------------
-	public void StartAutoShoot(boolean hoodUp)
+//	public void StartAutoShoot()
+//	{
+//		Util.consoleLog();
+//		
+//		if (shootThread != null) return;
+//		
+//		shootThread = new Shoot(true);
+//		shootThread.start();
+//	}
+	//----------------------------------------
+//	public void StopAutoShoot()
+//	{
+//		Util.consoleLog();
+//
+//		if (shootThread != null) shootThread.interrupt();
+//		
+//		shootThread = null;
+//	}
+	//----------------------------------------
+	public void StartShoot(boolean spinUpMotors)
 	{
 		Util.consoleLog();
-
-//		if (hoodUp)
-//			HoodUp();
-//		else
-//			HoodDown();
 		
 		if (shootThread != null) return;
 		
-		shootThread = new Shoot(true);
-		shootThread.start();
-	}
-	//----------------------------------------
-	public void StopAutoShoot()
-	{
-		Util.consoleLog();
-
-		if (shootThread != null) shootThread.interrupt();
-		
-		shootThread = null;
-	}
-	//----------------------------------------
-	public void StartShoot(boolean hoodUp)
-	{
-		Util.consoleLog();
-
-//		if (hoodUp)
-//			HoodUp();
-//		else
-//			HoodDown();
-		
-		if (shootThread != null) return;
-		
-		shootThread = new Shoot(false);
+		shootThread = new Shoot(spinUpMotors);
 		shootThread.start();
 	}
 	//----------------------------------------

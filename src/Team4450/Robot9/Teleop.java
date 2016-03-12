@@ -85,6 +85,7 @@ class Teleop
 		ptoDisable();
 		tiltUp();
 		armsUp();
+		shooter.HoodDown();
 		
 		// Configure LaunchPad and Joystick event handlers.
 		
@@ -141,15 +142,17 @@ class Teleop
 
 				leftY = rightY;
 			} 
-			else if (invertDrive)
-			{
-    			rightY = rightStick.GetY() * -1.0;		// fwd/back right
-    			leftY = leftStick.GetY() * -1.0;		// fwd/back left
-			}
+//			else if (invertDrive)
+//			{
+//    			rightY = rightStick.GetY() * -1.0;		// fwd/back right
+//    			leftY = leftStick.GetY() * -1.0;		// fwd/back left
+//			}
 			else
 			{
-				rightY = rightStick.GetY();				// fwd/back right
-    			leftY = leftStick.GetY();				// fwd/back left
+//				rightY = rightStick.GetY();				// fwd/back right
+//    			leftY = leftStick.GetY();				// fwd/back left
+				rightY = stickCorrection(rightStick.GetY());	// fwd/back right
+    			leftY = stickCorrection(leftStick.GetY());		// fwd/back left
 			}
 			
 			LCD.printLine(3, "encoder=%d  climbUp=%b", encoder.get(), climbUpSwitch.get());
@@ -173,6 +176,21 @@ class Teleop
 		Util.consoleLog("end");
 	}
 
+	// Map joystick y value of 0.0-1.0 to the motor working power range of approx 0.5-1.0
+	
+	double stickCorrection(double y)
+	{
+		if (y != 0)
+		{
+			if (y > 0)
+				y = y / 2 + .5;
+			else
+				y = y / 2 - .5;
+		}
+		
+		return y;
+	}
+	
 	// Transmission control functions.
 	
 	void shifterLow()
@@ -357,7 +375,7 @@ class Teleop
 					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam1);			
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
-				shooter.StopAutoShoot();
+				shooter.StopShoot();
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
 				//invertDrive = joyStickEvent.button.latchedState;

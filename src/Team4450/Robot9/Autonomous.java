@@ -98,6 +98,8 @@ public class Autonomous
 			case 4:		// Auto shoot from spybot position.
 				Shooter shoot = new Shooter(robot, null);
 				
+				shoot.HoodUp();
+				
 				shoot.StartShoot(true);
 				
 				Timer.delay(4000);
