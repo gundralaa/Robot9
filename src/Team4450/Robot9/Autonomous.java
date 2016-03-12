@@ -96,7 +96,7 @@ public class Autonomous
 				break;
 
 			case 4:		// Auto shoot from spybot position.
-				Shooter shoot = new Shooter(robot);
+				Shooter shoot = new Shooter(robot, null);
 				
 				shoot.StartShoot(true);
 				

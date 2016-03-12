@@ -12,21 +12,22 @@ import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.Relay;
 
 class Teleop
 {
 	private final Robot 		robot;
-	private JoyStick			rightStick, leftStick, utilityStick;
+	public  JoyStick			rightStick, leftStick, utilityStick;
 	private LaunchPad			launchPad;
 	private final FestoDA		shifterValve = new FestoDA(2);
 	private final FestoDA		ptoValve = new FestoDA(0);
 	private final FestoDA		tiltValve = new FestoDA(1, 0);
 	private final FestoDA		armsValve = new FestoDA(1, 2);
 	private boolean				ptoMode = false, invertDrive = false;
+	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
 	//private final RevDigitBoard	revBoard = new RevDigitBoard();
 	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
-	public  final Shooter		shooter;
-	//private final Talon			armMotor;
+	private final Shooter		shooter;
 	private final DigitalInput	climbUpSwitch = new DigitalInput(3);
 	
 	// encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
@@ -40,8 +41,7 @@ class Teleop
 
 		this.robot = robot;
 		
-		//armMotor = new Talon(2);
-		shooter = new Shooter(robot);
+		shooter = new Shooter(robot, this);
 	}
 
 	// Free all objects that need it.
@@ -62,6 +62,7 @@ class Teleop
 		//if (armMotor != null) armMotor.free();
 		if (climbUpSwitch != null) climbUpSwitch.free();
 		if (encoder != null) encoder.free();
+		if (headLight != null) headLight.free();
 		//if (revBoard != null) revBoard.dispose();
 		//if (hallEffectSensor != null) hallEffectSensor.free();
 	}
@@ -96,6 +97,7 @@ class Teleop
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_BLUE);
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_GREEN);
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_RED);
+		launchPad.AddControl(LaunchPadControlIDs.BUTTON_RED_RIGHT);
         launchPad.addLaunchPadEventListener(new LaunchPadListener());
         launchPad.Start();
 
@@ -242,6 +244,19 @@ class Teleop
 		
 		armsValve.SetA();
 	}
+	//--------------------------------------
+	void lightOn()
+	{
+		headLight.set(Relay.Value.kOn);
+		SmartDashboard.putBoolean("Light", true);
+	}
+	
+	void lightOff()
+	{
+		headLight.set(Relay.Value.kOff);
+		rightStick.FindButton(JoyStickButtonIDs.TRIGGER).latchedState = false;
+		SmartDashboard.putBoolean("Light", false);
+	}
 	
 	// Handle LaunchPad control events.
 	
@@ -288,6 +303,14 @@ class Teleop
 				}
     			else
     				ptoDisable();
+			}
+
+			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_RED_RIGHT)
+			{
+				if (launchPadEvent.control.latchedState)
+					lightOn();
+				else
+					lightOff();
 			}
 	    }
 	    
@@ -337,7 +360,11 @@ class Teleop
 				shooter.StopAutoShoot();
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
-				invertDrive = joyStickEvent.button.latchedState;
+				//invertDrive = joyStickEvent.button.latchedState;
+				if (joyStickEvent.button.latchedState)
+					lightOn();
+				else
+					lightOff();
 	    }
 
 	    public void ButtonUp(JoyStickEvent joyStickEvent) 
@@ -386,7 +413,10 @@ class Teleop
 			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
+			{
+				lightOff();
 				shooter.StartShoot(false);
+			}
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_RIGHT))
 				if (joyStickEvent.button.latchedState)

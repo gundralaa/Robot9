@@ -1,6 +1,7 @@
 package Team4450.Robot9;
 
 import Team4450.Lib.*;
+import Team4450.Lib.JoyStick.JoyStickButtonIDs;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Talon;
@@ -9,7 +10,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Shooter
 {
-	private final Robot	robot;
+	private final Robot		robot;
+	private final Teleop	teleop;
 	
 	//private final CANTalon		pickupMotor = new CANTalon(7);
 	private final SpeedController	pickupMotor;
@@ -21,11 +23,12 @@ public class Shooter
 	
 	private Thread					autoPickupThread, shootThread;
 
-	Shooter(Robot robot)
+	Shooter(Robot robot, Teleop teleop)
 	{
 		Util.consoleLog();
 		
 		this.robot = robot;
+		this.teleop = teleop;
 
 		// Handle the fact that the pickup motor is a CANTalon on competition robot
 		// and a pwm Talon on clone.
@@ -130,6 +133,8 @@ public class Shooter
 		
 		shooterMotor1.set(0);
 		shooterMotor2.set(0);
+		
+		if (teleop != null) teleop.rightStick.FindButton(JoyStickButtonIDs.TOP_LEFT).latchedState = false;
 		SmartDashboard.putBoolean("ShooterMotor", false);
 	}
 	//----------------------------------------
@@ -242,7 +247,7 @@ public class Shooter
 	
 	private class Shoot extends Thread
 	{
-		boolean		spinUpMotors;
+		boolean			spinUpMotors;
 		
 		Shoot(boolean spinUpMotors)
 		{

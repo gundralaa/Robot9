@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-03.09.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-03.11.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -43,6 +43,7 @@ public class Robot extends SampleRobot
   final Joystick		launchPad = new Joystick(3);
   
   final Compressor		compressor = new Compressor(0);
+  final Compressor		compressor1 = new Compressor(1);
   final AnalogGyro		gyro = new AnalogGyro(0);		// gyro must be plugged into analog port 0 or 1.
 
   public Properties		robotProperties;
@@ -53,7 +54,7 @@ public class Robot extends SampleRobot
   CameraServer			usbCameraServer = null;
 
   DriverStation         ds = null;
-    
+    	
   DriverStation.Alliance	alliance;
   int                       location;
     
@@ -116,10 +117,13 @@ public class Robot extends SampleRobot
    		//SmartDashboard.putBoolean("CompressorEnabled", false);
    		SmartDashboard.putBoolean("CompressorEnabled", Boolean.parseBoolean(robotProperties.getProperty("CompressorEnabledByDefault")));
 
-   		// Reset PDB sticky faults.
+   		// Reset PDB & PCM sticky faults.
       
    		PDP = new PowerDistributionPanel();
    		PDP.clearStickyFaults();
+   		
+   		compressor.clearAllPCMStickyFaults();
+   		compressor1.clearAllPCMStickyFaults();
 
    		// Configure motor controllers and RobotDrive.
         // Competition robot uses CAN Talons clone uses PWM Talons.
