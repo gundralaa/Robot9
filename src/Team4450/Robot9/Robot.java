@@ -48,7 +48,7 @@ public class Robot extends SampleRobot
 
   public Properties		robotProperties;
   
-  PowerDistributionPanel PDP;
+  PowerDistributionPanel PDP = new PowerDistributionPanel();
   
   //AxisCamera			camera = null;
   CameraServer			usbCameraServer = null;
@@ -119,9 +119,7 @@ public class Robot extends SampleRobot
 
    		// Reset PDB & PCM sticky faults.
       
-   		PDP = new PowerDistributionPanel();
    		PDP.clearStickyFaults();
-   		
    		compressor.clearAllPCMStickyFaults();
    		compressor1.clearAllPCMStickyFaults();
 
@@ -232,6 +230,8 @@ public class Robot extends SampleRobot
     	  compressor.setClosedLoopControl(SmartDashboard.getBoolean("CompressorEnabled", true));
 
     	  PDP.clearStickyFaults();
+    	  compressor.clearAllPCMStickyFaults();
+    	  compressor1.clearAllPCMStickyFaults();
              
     	  // Start autonomous process contained in the MyAutonomous class.
         
@@ -265,6 +265,8 @@ public class Robot extends SampleRobot
           Util.consoleLog("Alliance=%s, Location=%d, FMS=%b", alliance.name(), location, ds.isFMSAttached());
 
           PDP.clearStickyFaults();
+          compressor.clearAllPCMStickyFaults();
+       	  compressor1.clearAllPCMStickyFaults();
 
           // This code turns off the automatic compressor management if requested by DS.
           compressor.setClosedLoopControl(SmartDashboard.getBoolean("CompressorEnabled", true));
