@@ -31,6 +31,13 @@ public class Util
 	// Logging class for use by other classes to log through our custom logging scheme. All
 	// logging should be done by calls to methods on this class instance.
 	public final static Logger logger = Logger.getGlobal();
+	
+	// Private constructor means this class cannot be instantiated. All access is static.
+	
+	private Util()
+	{
+		
+	}
 
 	// Read our properties file from RoboRio memory.
 	

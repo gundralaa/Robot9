@@ -183,9 +183,9 @@ class Teleop
 		if (y != 0)
 		{
 			if (y > 0)
-				y = y / 2 + .5;
+				y = y / 1.5 + .4;
 			else
-				y = y / 2 - .5;
+				y = y / 1.5 - .4;
 		}
 		
 		return y;

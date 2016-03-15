@@ -13,7 +13,7 @@ import com.ni.vision.NIVision.ImageType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 /**
- * Example of finding target wiht green light shined on retroreflective tape.
+ * Example of finding target with green light shined on retroreflective tape.
  * This example utilizes an image file, which you need to copy to the roboRIO
  * To use a camera you will have to integrate the appropriate camera details with this example.
  * To use a USB camera instead, see the SimpelVision and AdvancedVision examples for details
@@ -92,24 +92,20 @@ public class Vision2016
 		// directory shown below using FTP or SFTP: http://wpilib.screenstepslive.com/s/4485/m/24166/l/282299-roborio-ftp
 		NIVision.imaqReadFile(frame, "/home/lvuser/SampleImages/image.jpg");
 
-		// Threshold the image looking for yellow (tote color)
+		// Threshold the image looking for green
 		NIVision.imaqColorThreshold(binaryFrame, frame, 255, NIVision.ColorMode.HSV, HUE_RANGE, SAT_RANGE, VAL_RANGE);
 
-		// Send particle count to dashboard
+		// Send particle count to log
 		int numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
 		Util.consoleLog("Masked particles=%d", numParticles);
 
-		// Send masked image to dashboard to assist in tweaking mask.
-		// CameraServer.getInstance().setImage(binaryFrame);
-
 		// filter out small particles
-		//float areaMin = (float) SmartDashboard.getNumber("Area min %", AREA_MINIMUM);
 		float areaMin = (float) AREA_MINIMUM;
 		criteria[0].lower = areaMin;
 		
 		imaqError = NIVision.imaqParticleFilter4(binaryFrame, binaryFrame, criteria, filterOptions, null);
 
-		// Send particle count after filtering to dashboard
+		// Send particle count after filtering to log
 		numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
 		Util.consoleLog("Filtered particles=%d", numParticles);
 
@@ -137,14 +133,13 @@ public class Vision2016
 			// for the reader. Note that this scores and reports information about a single particle (single L shaped target). To get accurate information 
 			// about the location of the tote (not just the distance) you will need to correlate two adjacent targets in order to find the true center of the tote.
 			scores.Aspect = AspectScore(particles.elementAt(0));
-			Util.consoleLog("Aspect=%f", scores.Aspect);
 			scores.Area = AreaScore(particles.elementAt(0));
-			Util.consoleLog("Area=%f", scores.Area);
 			isTarget = scores.Aspect > SCORE_MIN && scores.Area > SCORE_MIN;
 
 			// Log distance and target status. The bounding rect, particularly the horizontal center (left - right) may be useful for rotating/driving towards a tote
-			Util.consoleLog("IsTarget=%b", isTarget);
-			Util.consoleLog("Distance=%f", computeDistance(binaryFrame, particles.elementAt(0)));
+
+			Util.consoleLog("Aspect=%f  Area=%f  IsTarget=%b  Dist=%f", scores.Aspect, scores.Area, isTarget,
+							computeDistance(binaryFrame, particles.elementAt(0)));
 		} 
 
 		Util.consoleLog("IsTarget", false);

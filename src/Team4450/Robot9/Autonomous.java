@@ -82,6 +82,8 @@ public class Autonomous
 					LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
 					Timer.delay(.020);
 				}
+				
+				encoder.reset();
 
 				robot.robotDrive.tankDrive(-.94, -.90);
 				
@@ -102,7 +104,7 @@ public class Autonomous
 				
 				shoot.StartShoot(true);
 				
-				Timer.delay(4000);
+				Timer.delay(8.0);	// Seconds.
 				
 				shoot.dispose();
 				break;
