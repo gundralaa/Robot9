@@ -25,7 +25,7 @@ class Teleop
 	private final FestoDA		armsValve = new FestoDA(1, 2);
 	private boolean				ptoMode = false, invertDrive = false;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
-	//private final RevDigitBoard	revBoard = new RevDigitBoard();
+	//private final RevDigitBoard	revBoard = RevDigitBoard.getInstance();
 	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
 	private final Shooter		shooter;
 	private final DigitalInput	climbUpSwitch = new DigitalInput(3);

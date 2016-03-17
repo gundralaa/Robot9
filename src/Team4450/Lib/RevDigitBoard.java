@@ -13,7 +13,7 @@ import edu.wpi.first.wpilibj.AnalogInput;
 public class RevDigitBoard
 {
 	// RevDigitBoard is a Singleton class. One instance only as there is only one RevDigitBoard per robot.
-	private static RevDigitBoard	instance = new RevDigitBoard();
+	private static RevDigitBoard	instance;
 	
 	// I2C address of the digit board is 0x70
 	private I2C i2c = new I2C(Port.kMXP, 0x70);
@@ -40,6 +40,10 @@ public class RevDigitBoard
 	public static RevDigitBoard getInstance()
 	{
 		Util.consoleLog();
+		
+		// Create common instance if needed.
+		
+		if (instance == null) instance = new RevDigitBoard();
 
 		// Load the character registry.
 		instance.charreg[0][0] = (byte)0b00000110; instance.charreg[0][1] = (byte)0b00000000; //1
@@ -110,6 +114,8 @@ public class RevDigitBoard
 		if (pot != null) pot.free();
 		if (buttonA != null) buttonA.free();
 		if (buttonB != null) buttonB.free();
+		
+		instance = null;
 	}
 	
 	/**

@@ -1,5 +1,7 @@
 package Team4450.Lib;
 
+import java.io.File;
+
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 public final class Grip
@@ -74,11 +76,17 @@ public final class Grip
 	
 	public static void startGrip()
 	{
+		ProcessBuilder pb;
+		
 		Util.consoleLog();
 	  
 		try
 		{
-			gripProcess = new ProcessBuilder("/home/lvuser/grip").inheritIO().start();
+			pb = new ProcessBuilder("/home/lvuser/grip");
+			//pb.redirectErrorStream(true);
+			//pb.redirectOutput(new File("/home/lvuser/grip.log.txt"));
+			
+			gripProcess = pb.start();
 		}
 		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
 	}
@@ -90,6 +98,13 @@ public final class Grip
 		if (gripProcess != null) gripProcess.destroy();
 	  
 		gripProcess = null;
+	}
+	
+	public static void suspendGrip(boolean suspend)
+	{
+		Util.consoleLog("%b", suspend);
+		
+		gripTable.putBoolean("run", suspend);
 	}
  
 	public static ContoursReport getContoursReport()

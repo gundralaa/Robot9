@@ -86,11 +86,11 @@ public class Vision2016
 	{
 		boolean isTarget = false;
 		
-		//frame = image;
+		frame = image;
 		
 		// read file in from disk. For this example to run you need to copy image.jpg from the SampleImages folder to the
 		// directory shown below using FTP or SFTP: http://wpilib.screenstepslive.com/s/4485/m/24166/l/282299-roborio-ftp
-		NIVision.imaqReadFile(frame, "/home/lvuser/SampleImages/image.jpg");
+		//NIVision.imaqReadFile(frame, "/home/lvuser/SampleImages/image.jpg");
 
 		// Threshold the image looking for green
 		NIVision.imaqColorThreshold(binaryFrame, frame, 255, NIVision.ColorMode.HSV, HUE_RANGE, SAT_RANGE, VAL_RANGE);

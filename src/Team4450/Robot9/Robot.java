@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-03.14.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-03.17.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -174,7 +174,7 @@ public class Robot extends SampleRobot
       
    		cameraThread = new CameraFeed(this);
    		cameraThread.start();
-     
+   		
    		// Start thread to monitor distance sensor.
    		
    		//monitorDistanceThread = new MonitorDistanceMBX(this);
@@ -204,6 +204,8 @@ public class Robot extends SampleRobot
 		  SmartDashboard.putBoolean("PickupMotor", false);
 		  SmartDashboard.putBoolean("Light", false);
 
+		  //Grip.stopGrip();
+		  
 		  Util.consoleLog("end");
 	  }
 	  catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
@@ -271,6 +273,8 @@ public class Robot extends SampleRobot
 
           // This code turns off the automatic compressor management if requested by DS.
           compressor.setClosedLoopControl(SmartDashboard.getBoolean("CompressorEnabled", true));
+          
+          //Grip.startGrip();
         
           // Start operator control process contained in the MyTeleop class.
         
