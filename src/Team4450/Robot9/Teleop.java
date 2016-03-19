@@ -24,6 +24,7 @@ class Teleop
 	private final FestoDA		tiltValve = new FestoDA(1, 0);
 	private final FestoDA		armsValve = new FestoDA(1, 2);
 	private boolean				ptoMode = false, invertDrive = false;
+	private double				shooterPower = 1.0;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
 	//private final RevDigitBoard	revBoard = RevDigitBoard.getInstance();
 	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
@@ -93,6 +94,9 @@ class Teleop
 		LaunchPadControl lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_LEFT_FRONT);
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
 		lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_LEFT_BACK);
+		lpControl.controlType = LaunchPadControlTypes.SWITCH;
+		lpControl.controlType = LaunchPadControlTypes.SWITCH;
+		lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_RIGHT);
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_YELLOW);
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_BLUE);
@@ -354,6 +358,12 @@ class Teleop
 					robot.SetCANTalonNeutral(false);	// coast
 				else
 					robot.SetCANTalonNeutral(true);		// brake
+			
+			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_RIGHT))
+				if (launchPadEvent.control.latchedState)
+					shooterPower = 0.80;
+				else
+					shooterPower = 1.0;
 	    }
 	}
 
@@ -444,19 +454,19 @@ class Teleop
 					
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_LEFT))
 				if (joyStickEvent.button.latchedState)
-					shooter.ShooterMotorStart(1);
+					shooter.ShooterMotorStart(shooterPower);
 				else
 					shooter.ShooterMotorStop();
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
 				if (joyStickEvent.button.latchedState)
-					shooter.PickupMotorIn(1);
+					shooter.PickupMotorIn(1.0);
 				else
 					shooter.PickupMotorStop();
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_BACK))
 				if (joyStickEvent.button.latchedState)
-					shooter.PickupMotorOut(1);
+					shooter.PickupMotorOut(1.0);
 				else
 					shooter.PickupMotorStop();
 	    }

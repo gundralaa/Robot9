@@ -257,7 +257,7 @@ public class Shooter
 	    		{
 	    			ShooterMotorStart(1.0);
 
-	    			sleep(5000);
+	    			sleep(6000);
 	    		}
 	    		
 	    		PickupMotorIn(1.0);
