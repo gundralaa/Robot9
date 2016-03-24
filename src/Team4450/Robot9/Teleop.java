@@ -23,7 +23,7 @@ class Teleop
 	private final FestoDA		ptoValve = new FestoDA(0);
 	private final FestoDA		tiltValve = new FestoDA(1, 0);
 	private final FestoDA		armsValve = new FestoDA(1, 2);
-	private boolean				ptoMode = false, invertDrive = false;
+	private boolean				ptoMode = false, invertDrive = false, limitSwitchEnabled = true;
 	private double				shooterPower = 1.0;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
 	//private final RevDigitBoard	revBoard = RevDigitBoard.getInstance();
@@ -113,7 +113,7 @@ class Teleop
         
 		rightStick = new JoyStick(robot.rightStick, "RightStick", JoyStickButtonIDs.TOP_LEFT, this);
         rightStick.AddButton(JoyStickButtonIDs.TOP_MIDDLE);
-		rightStick.AddButton(JoyStickButtonIDs.TRIGGER);
+		//rightStick.AddButton(JoyStickButtonIDs.TRIGGER);
         rightStick.addJoyStickEventListener(new RightStickListener());
         rightStick.Start();
         
@@ -142,7 +142,7 @@ class Teleop
 			{
 				rightY = utilityStick.GetY();
 				
-				if (rightY > 0 && climbUpSwitch.get()) rightY = 0;
+				if (rightY > 0 && climbUpSwitch.get() && limitSwitchEnabled) rightY = 0;
 
 				leftY = rightY;
 			} 
@@ -155,8 +155,8 @@ class Teleop
 			{
 //				rightY = rightStick.GetY();				// fwd/back right
 //    			leftY = leftStick.GetY();				// fwd/back left
-				rightY = stickCorrection(rightStick.GetY());	// fwd/back right
-    			leftY = stickCorrection(leftStick.GetY());		// fwd/back left
+				rightY = stickLogCorrection(rightStick.GetY());	// fwd/back right
+    			leftY = stickLogCorrection(leftStick.GetY());		// fwd/back left
 			}
 			
 			LCD.printLine(3, "encoder=%d  climbUp=%b", encoder.get(), climbUpSwitch.get());
@@ -182,17 +182,40 @@ class Teleop
 
 	// Map joystick y value of 0.0-1.0 to the motor working power range of approx 0.5-1.0
 	
-	double stickCorrection(double y)
+	private double stickCorrection(double joystickValue)
 	{
-		if (y != 0)
+		if (joystickValue != 0)
 		{
-			if (y > 0)
-				y = y / 1.5 + .4;
+			if (joystickValue > 0)
+				joystickValue = joystickValue / 1.5 + .4;
 			else
-				y = y / 1.5 - .4;
+				joystickValue = joystickValue / 1.5 - .4;
 		}
 		
-		return y;
+		return joystickValue;
+	}
+	
+	// Custom base logrithim.
+	// Returns logrithim base of the value.
+	
+	private double baseLog(double base, double value)
+	{
+		return Math.log(value) / Math.log(base);
+	}
+
+	// Map joystick y value of 0.0-1.0 to the motor working power range of approx 0.5-1.0 using
+	// logrithmic curve.
+	
+	private double stickLogCorrection(double joystickValue)
+	{
+		double base = Math.pow(2, 1/3) + Math.pow(2, 1/3);
+		
+		if (joystickValue > 0)
+			joystickValue = baseLog(base, joystickValue + 1);
+		else if (joystickValue < 0)
+			joystickValue = -baseLog(base, -joystickValue + 1);
+			
+		return joystickValue;
 	}
 	
 	// Transmission control functions.
@@ -267,18 +290,18 @@ class Teleop
 		armsValve.SetA();
 	}
 	//--------------------------------------
-	void lightOn()
-	{
-		headLight.set(Relay.Value.kOn);
-		SmartDashboard.putBoolean("Light", true);
-	}
-	
-	void lightOff()
-	{
-		headLight.set(Relay.Value.kOff);
-		rightStick.FindButton(JoyStickButtonIDs.TRIGGER).latchedState = false;
-		SmartDashboard.putBoolean("Light", false);
-	}
+//	void lightOn()
+//	{
+//		headLight.set(Relay.Value.kOn);
+//		SmartDashboard.putBoolean("Light", true);
+//	}
+//	
+//	void lightOff()
+//	{
+//		headLight.set(Relay.Value.kOff);
+//		rightStick.FindButton(JoyStickButtonIDs.TRIGGER).latchedState = false;
+//		SmartDashboard.putBoolean("Light", false);
+//	}
 	
 	// Handle LaunchPad control events.
 	
@@ -329,10 +352,13 @@ class Teleop
 
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_RED_RIGHT)
 			{
-				if (launchPadEvent.control.latchedState)
-					lightOn();
-				else
-					lightOff();
+				limitSwitchEnabled = !limitSwitchEnabled;
+				SmartDashboard.putBoolean("LSOverride", !limitSwitchEnabled);
+
+//				if (launchPadEvent.control.latchedState)
+//					lightOn();
+//				else
+//					lightOff();
 			}
 	    }
 	    
@@ -361,9 +387,15 @@ class Teleop
 			
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_RIGHT))
 				if (launchPadEvent.control.latchedState)
-					shooterPower = 0.80;
+				{
+					shooterPower = 0.70;
+					SmartDashboard.putBoolean("ShooterLowPower", true);
+				}
 				else
+				{
 					shooterPower = 1.0;
+					SmartDashboard.putBoolean("ShooterLowPower", false);
+				}
 	    }
 	}
 
@@ -387,12 +419,12 @@ class Teleop
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
 				shooter.StopShoot();
 			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
-				//invertDrive = joyStickEvent.button.latchedState;
-				if (joyStickEvent.button.latchedState)
-					lightOn();
-				else
-					lightOff();
+//			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
+//				//invertDrive = joyStickEvent.button.latchedState;
+//				if (joyStickEvent.button.latchedState)
+//					lightOn();
+//				else
+//					lightOff();
 	    }
 
 	    public void ButtonUp(JoyStickEvent joyStickEvent) 
@@ -442,7 +474,7 @@ class Teleop
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
 			{
-				lightOff();
+				//lightOff();
 				shooter.StartShoot(false);
 			}
 			

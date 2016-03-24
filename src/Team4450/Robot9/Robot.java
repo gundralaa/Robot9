@@ -31,7 +31,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-03.18.16-03";
+  static final String  	PROGRAM_NAME = "RAC9-03.23.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -202,7 +202,8 @@ public class Robot extends SampleRobot
 		  SmartDashboard.putBoolean("FMS", ds.isFMSAttached());
 		  SmartDashboard.putBoolean("ShooterMotor", false);
 		  SmartDashboard.putBoolean("PickupMotor", false);
-		  SmartDashboard.putBoolean("Light", false);
+		  SmartDashboard.putBoolean("LSOverride", false);
+		  SmartDashboard.putBoolean("ShooterLowPower", false);
 
 		  //Grip.stopGrip();
 		  
