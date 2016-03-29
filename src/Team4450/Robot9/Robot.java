@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.PowerDistributionPanel;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.Talon;
-import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -31,7 +30,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-03.23.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-03.28.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -43,7 +42,7 @@ public class Robot extends SampleRobot
   final Joystick        rightStick = new Joystick(1);	// 2
   final Joystick		launchPad = new Joystick(3);
   
-  final Compressor		compressor = new Compressor(0);
+  final Compressor		compressor = new Compressor(0);	// Compressor class represents the PCM.
   final Compressor		compressor1 = new Compressor(1);
   final AnalogGyro		gyro = new AnalogGyro(0);		// gyro must be plugged into analog port 0 or 1.
   
@@ -62,9 +61,9 @@ public class Robot extends SampleRobot
   Thread               	monitorBatteryThread, monitorDistanceThread, monitorCompressorThread;
   CameraFeed			cameraThread;
     
-  static final String  	CAMERA_IP = "10.44.50.11";
+  //static final String  	CAMERA_IP = "10.44.50.11";
   static final int	   	USB_CAMERA = 2;
-  static final int     	IP_CAMERA = 3;
+  //static final int     	IP_CAMERA = 3;
  
   // PWM port assignments:
   // 0 - shooter motor
@@ -79,15 +78,15 @@ public class Robot extends SampleRobot
   public Robot() throws IOException
   {	
 	// Set up our custom logger.
-	  
+	 
 	try
 	{
 		Util.CustomLogger.setup();
-    }
-    catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
-      
-    try
-    {
+//    }
+//    catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+//      
+//    try
+//    {
     	Util.consoleLog(PROGRAM_NAME);
     
         ds = DriverStation.getInstance();
@@ -174,6 +173,9 @@ public class Robot extends SampleRobot
       
    		cameraThread = new CameraFeed(this);
    		cameraThread.start();
+
+        //Grip.suspendGrip(true);
+   		//Grip.startGrip();
    		
    		// Start thread to monitor distance sensor.
    		
@@ -205,7 +207,7 @@ public class Robot extends SampleRobot
 		  SmartDashboard.putBoolean("LSOverride", false);
 		  SmartDashboard.putBoolean("ShooterLowPower", false);
 
-		  //Grip.stopGrip();
+		  //Grip.suspendGrip(true);
 		  
 		  Util.consoleLog("end");
 	  }
@@ -275,7 +277,7 @@ public class Robot extends SampleRobot
           // This code turns off the automatic compressor management if requested by DS.
           compressor.setClosedLoopControl(SmartDashboard.getBoolean("CompressorEnabled", true));
           
-          //Grip.startGrip();
+          //Grip.suspendGrip(false);
         
           // Start operator control process contained in the MyTeleop class.
         

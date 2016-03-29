@@ -2,6 +2,7 @@
 package Team4450.Lib;
 
 import Team4450.Robot9.Robot;
+import Team4450.Robot9.Vision2016;
 
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.Image;
@@ -22,6 +23,7 @@ public class CameraFeed extends Thread
 	private CameraServer 	server;
 	private boolean			cameraChangeInProgress;
 	private Robot			robot;
+	private Vision2016		vision = new Vision2016();
 	
 	/**
 	 * @param robot Robot class instance.
@@ -91,6 +93,8 @@ public class CameraFeed extends Thread
 	// Run thread to read and feed camera images. Called by Thread.start().
 	public void run()
 	{
+		int frameCount = 0;
+		
 		try
 		{
 			Util.consoleLog();
@@ -98,6 +102,14 @@ public class CameraFeed extends Thread
 			while (true)
 			{
 				if (!cameraChangeInProgress) UpdateCameraImage();
+		
+//				frameCount++;
+//				
+//				if (frameCount == frameRate)
+//				{
+//					frameCount = 0;
+//					vision.CheckTarget(frame);
+//				}
 				
 				Timer.delay(1 / frameRate);
 			}
@@ -105,6 +117,12 @@ public class CameraFeed extends Thread
 		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
 	}
 	
+	public void CheckForTarget()
+	{
+		Util.consoleLog();
+		
+		vision.CheckTarget(frame);
+	}
 	/**
 	 * Stop feed, ie close camera stream.
 	 */

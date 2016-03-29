@@ -95,16 +95,16 @@ public final class Grip
 	{
 		Util.consoleLog();
 	  
-		if (gripProcess != null) gripProcess.destroy();
+		if (gripProcess != null) gripProcess.destroyForcibly();
 	  
 		gripProcess = null;
 	}
 	
 	public static void suspendGrip(boolean suspend)
 	{
-		Util.consoleLog("%b", suspend);
+		Util.consoleLog("%b", !suspend);
 		
-		gripTable.putBoolean("run", suspend);
+		gripTable.putBoolean("run", !suspend);
 	}
  
 	public static ContoursReport getContoursReport()

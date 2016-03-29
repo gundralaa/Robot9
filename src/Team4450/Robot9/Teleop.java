@@ -22,7 +22,8 @@ class Teleop
 	private final FestoDA		shifterValve = new FestoDA(2);
 	private final FestoDA		ptoValve = new FestoDA(0);
 	private final FestoDA		tiltValve = new FestoDA(1, 0);
-	private final FestoDA		armsValve = new FestoDA(1, 2);
+	private final FestoDA		climberArmsValve = new FestoDA(1, 2);
+	private final FestoDA		defenseArmsValve = new FestoDA(1, 4);
 	private boolean				ptoMode = false, invertDrive = false, limitSwitchEnabled = true;
 	private double				shooterPower = 1.0;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
@@ -58,7 +59,8 @@ class Teleop
 		if (shifterValve != null) shifterValve.dispose();
 		if (ptoValve != null) ptoValve.dispose();
 		if (tiltValve != null) tiltValve.dispose();
-		if (armsValve != null) armsValve.dispose();
+		if (climberArmsValve != null) climberArmsValve.dispose();
+		if (defenseArmsValve != null) defenseArmsValve.dispose();
 		if (shooter != null) shooter.dispose();
 		//if (armMotor != null) armMotor.free();
 		if (climbUpSwitch != null) climbUpSwitch.free();
@@ -85,7 +87,8 @@ class Teleop
 		shifterLow();
 		ptoDisable();
 		tiltUp();
-		armsUp();
+		climberArmsUp();
+		defenseArmsUp();
 		shooter.HoodDown();
 		
 		// Configure LaunchPad and Joystick event handlers.
@@ -95,7 +98,6 @@ class Teleop
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
 		lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_LEFT_BACK);
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
-		lpControl.controlType = LaunchPadControlTypes.SWITCH;
 		lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_RIGHT);
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_YELLOW);
@@ -103,6 +105,7 @@ class Teleop
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_GREEN);
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_RED);
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_RED_RIGHT);
+		launchPad.AddControl(LaunchPadControlIDs.BUTTON_BLUE_RIGHT);
         launchPad.addLaunchPadEventListener(new LaunchPadListener());
         launchPad.Start();
 
@@ -276,18 +279,32 @@ class Teleop
 		tiltValve.SetB();
 	}
 	//--------------------------------------
-	void armsUp()
+	void climberArmsUp()
 	{
 		Util.consoleLog();
 		
-		armsValve.SetB();
+		climberArmsValve.SetB();
 	}
 
-	void armsDown()
+	void climberArmsDown()
 	{
 		Util.consoleLog();
 		
-		armsValve.SetA();
+		climberArmsValve.SetA();
+	}
+	//--------------------------------------
+	void defenseArmsUp()
+	{
+		Util.consoleLog();
+		
+		defenseArmsValve.SetB();
+	}
+
+	void defenseAmrsDown()
+	{
+		Util.consoleLog();
+		
+		defenseArmsValve.SetA();
 	}
 	//--------------------------------------
 //	void lightOn()
@@ -317,7 +334,7 @@ class Teleop
 				else
 					shooter.HoodDown();
 			
-			if (launchPadEvent.control.id.equals(LaunchPad.LaunchPadControlIDs.BUTTON_RED))
+			if (launchPadEvent.control.id.equals(LaunchPad.LaunchPadControlIDs.BUTTON_BLACK))
 				if (launchPadEvent.control.latchedState)
 					shooter.PickupArmDown();
 				else
@@ -350,6 +367,11 @@ class Teleop
     				ptoDisable();
 			}
 
+			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE_RIGHT)
+			{
+				robot.cameraThread.CheckForTarget();
+			}
+
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_RED_RIGHT)
 			{
 				limitSwitchEnabled = !limitSwitchEnabled;
@@ -359,6 +381,14 @@ class Teleop
 //					lightOn();
 //				else
 //					lightOff();
+			}
+			
+			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.BUTTON_RED))
+			{
+				if (launchPadEvent.control.latchedState)
+    				defenseAmrsDown();
+    			else
+    				defenseArmsUp();
 			}
 	    }
 	    
@@ -452,9 +482,9 @@ class Teleop
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
 			{
 				if (joyStickEvent.button.latchedState)
-    				armsDown();
+    				climberArmsDown();
     			else
-    				armsUp();
+    				climberArmsUp();
 			}
 	    }
 
