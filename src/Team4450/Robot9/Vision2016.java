@@ -38,6 +38,35 @@ public class Vision2016
 		int BoundingRectTop;
 		int BoundingRectRight;
 		int BoundingRectBottom;
+		int height;
+		int width;
+		int centerX;
+		int centerY;
+		
+		public int top()
+		{
+			return BoundingRectTop;
+		}
+		
+		public int left()
+		{
+			return BoundingRectLeft;
+		}
+		
+//		public int height()
+//		{
+//			return BoundingRectBottom - BoundingRectTop;
+//		}
+//		
+//		public int width()
+//		{
+//			return BoundingRectRight - BoundingRectLeft;
+//		}
+		
+		public NIVision.Rect rect()
+		{
+			return new NIVision.Rect(top(), left(), height, width);
+		}
 		
 		public int compareTo(ParticleReport r)
 		{
@@ -51,7 +80,9 @@ public class Vision2016
 		
 		public String toString()
 		{
-			return String.format("\narea=%.3f pctAreaToImage=%.2f\ntop=%d left=%d\nbottom=%d right=%d", Area, PercentAreaToImageArea, BoundingRectTop, BoundingRectLeft, BoundingRectBottom, BoundingRectRight);
+			return String.format("\narea=%.3f pctAreaToImage=%.2f\ntop=%d left=%d\nbottom=%d right=%d\nh=%d w=%d\nx=%d y=%d", 
+					Area, PercentAreaToImageArea, BoundingRectTop, BoundingRectLeft, BoundingRectBottom, BoundingRectRight,
+					height, width, centerX, centerY);
 		}
 	};
 
@@ -60,6 +91,11 @@ public class Vision2016
 	{
 		double Area;
 		double Aspect;
+		
+		public String toString()
+		{
+			return String.format("\narea score=%.3f  aspect ratio=%.3f", Area, Aspect);
+		}
 	};
 
 	// Images
@@ -67,21 +103,25 @@ public class Vision2016
 	int 	imaqError;
 
 	// Constants
-	NIVision.Range GREEN_HUE_RANGE = new NIVision.Range(37, 105);		//Default hue range for green reflection
-	NIVision.Range GREEN_SAT_RANGE = new NIVision.Range(230, 255);	//Default saturation range for green reflection
-	NIVision.Range GREEN_VAL_RANGE = new NIVision.Range(133, 183);	//Default value range for green reflection
+//	NIVision.Range HUE_RANGE = new NIVision.Range(37, 105);		
+//	NIVision.Range SAT_RANGE = new NIVision.Range(230, 255);	
+//	NIVision.Range VAL_RANGE = new NIVision.Range(133, 183);	
 	
-//	NIVision.Range WHITE_HUE_RANGE = new NIVision.Range(36, 104);		//Default hue range for green reflection
-//	NIVision.Range WHITE_SAT_RANGE = new NIVision.Range(0, 77);	//Default saturation range for green reflection
-//	NIVision.Range WHITE_VAL_RANGE = new NIVision.Range(240, 255);	//Default value range for green reflection
-	NIVision.Range WHITE_HUE_RANGE = new NIVision.Range(100, 155);		//Default hue range for green reflection
-	NIVision.Range WHITE_SAT_RANGE = new NIVision.Range(67, 255);	//Default saturation range for green reflection
-	NIVision.Range WHITE_VAL_RANGE = new NIVision.Range(200, 255);	//Default value range for green reflection
+//	NIVision.Range HUE_RANGE = new NIVision.Range(36, 104);		
+//	NIVision.Range SAT_RANGE = new NIVision.Range(0, 77);		
+//	NIVision.Range VAL_RANGE = new NIVision.Range(240, 255);	
 	
-	double AREA_MIN = 0.3; 			//Default Area minimum for particle as a percentage of total image area
-	//double LONG_RATIO = 2.22; 	//Target long side = 26.9 / Target height = 12.1 = 2.22
-	//double SHORT_RATIO = 1.4; 	//Target short side = 16.9 / Target height = 12.1 = 1.4
-	double SCORE_MIN = 75.0;  		//Minimum score to be considered a target
+//	NIVision.Range HUE_RANGE = new NIVision.Range(59, 137);		
+//	NIVision.Range SAT_RANGE = new NIVision.Range(64, 255);		
+//	NIVision.Range VAL_RANGE = new NIVision.Range(224, 255);	
+
+	NIVision.Range HUE_RANGE = new NIVision.Range(140, 228);		
+	NIVision.Range SAT_RANGE = new NIVision.Range(0, 12);		
+	NIVision.Range VAL_RANGE = new NIVision.Range(98, 100);	
+	
+	double AREA_MIN = 0.10; 		//Area minimum for particle as a percentage of total image area
+	double AREA_MAX = 0.50; 		//Area maximum for particle as a percentage of total image area
+	double SCORE_MIN = 50.0;  		//Minimum score to be considered a target
 	double VIEW_ANGLE = 60; 		//View angle for camera, set to Axis m1011 by default, 64 for m1013, 51.7 for 206, 
 									//52 for HD3000 square, 60 for HD3000 640x480
 
@@ -95,7 +135,7 @@ public class Vision2016
 	    // create images
 		frame = NIVision.imaqCreateImage(ImageType.IMAGE_RGB, 0);
 		binaryFrame = NIVision.imaqCreateImage(ImageType.IMAGE_U8, 0);
-		criteria[0] = new NIVision.ParticleFilterCriteria2(NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA, AREA_MIN, 100.0, 0, 0);
+		criteria[0] = new NIVision.ParticleFilterCriteria2(NIVision.MeasurementType.MT_AREA_BY_IMAGE_AREA, AREA_MIN, AREA_MAX, 0, 0);
 	}
 
 	public boolean CheckTarget(Image image) 
@@ -109,12 +149,12 @@ public class Vision2016
 		// Save passed in frame for processing.
 		frame = image;
 
-		NIVision.imaqWriteJPEGFile(frame, "/home/lvuser/SampleImages/image-1.jpg", 1000, null);
+		NIVision.imaqWriteJPEGFile(frame, "/home/lvuser/SampleImages/capture.jpg", 1000, null);
 
 		// Threshold the image looking for color.
-		NIVision.imaqColorThreshold(binaryFrame, frame, 255, NIVision.ColorMode.HSV, WHITE_HUE_RANGE, WHITE_SAT_RANGE, WHITE_VAL_RANGE);
+		NIVision.imaqColorThreshold(binaryFrame, frame, 255, NIVision.ColorMode.HSV, HUE_RANGE, SAT_RANGE, VAL_RANGE);
 		
-		NIVision.imaqWriteJPEGFile(binaryFrame, "/home/lvuser/SampleImages/image-2.jpg", 1000, new NIVision.RawData());
+		NIVision.imaqWriteJPEGFile(binaryFrame, "/home/lvuser/SampleImages/threshold.jpg", 1000, null); // new NIVision.RawData());
 		
 		// Send particle count to log.
 		int numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
@@ -123,10 +163,11 @@ public class Vision2016
 
 		// filter out small particles.
 		//criteria[0].lower = (float) AREA_MIN;
+		//Util.consoleLog("criterialower=%f", criteria[0].lower);
 		
 		imaqError = NIVision.imaqParticleFilter4(binaryFrame, binaryFrame, criteria, filterOptions, null);
 
-		NIVision.imaqWriteJPEGFile(binaryFrame, "/home/lvuser/SampleImages/image-3.jpg", 1000, new NIVision.RawData());
+		NIVision.imaqWriteJPEGFile(binaryFrame, "/home/lvuser/SampleImages/filtered.jpg", 1000, null); // new NIVision.RawData());
 
 		// Send particle count after filtering to log.
 		numParticles = NIVision.imaqCountParticles(binaryFrame, 1);
@@ -147,21 +188,33 @@ public class Vision2016
 				par.BoundingRectLeft = (int) NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_LEFT);
 				par.BoundingRectBottom = (int) NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_BOTTOM);
 				par.BoundingRectRight = (int) NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_RIGHT);
-				
+				par.centerX = (int) NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_CENTER_OF_MASS_X);
+				par.centerY = (int) NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_CENTER_OF_MASS_Y);
+				par.height = (int) NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_HEIGHT);
+				par.width = (int) NIVision.imaqMeasureParticle(binaryFrame, particleIndex, 0, NIVision.MeasurementType.MT_BOUNDING_RECT_WIDTH);
+						
 				particles.add(par);
 			}
 			
-			particles.sort(null);
+			particles.sort(null);	// Largest particle first.
 
 			ParticleReport par = particles.elementAt(0);
 
 			Util.consoleLog("%s\nIsTarget=%b  Dist=%f", par.toString(), isTarget, computeDistance(binaryFrame, par));
 			
-			NIVision.Rect rect = new NIVision.Rect(par.BoundingRectTop, par.BoundingRectLeft, par.BoundingRectBottom, par.BoundingRectRight);
+			scores = new Scores();
+			scores.Area = AreaScore(par);
+			scores.Aspect = AspectScore(par);
+			
+			Util.consoleLog("%s", scores.toString());
+			
+			NIVision.imaqDrawShapeOnImage(frame, frame, par.rect(), DrawMode.DRAW_VALUE, ShapeMode.SHAPE_RECT, 0.0f);
+
+			NIVision.Rect rect = new NIVision.Rect(par.centerY, par.centerX, 10, 10);
 			NIVision.imaqDrawShapeOnImage(frame, frame, rect, DrawMode.DRAW_VALUE, ShapeMode.SHAPE_RECT, 0.0f);
-			rect = new NIVision.Rect(238, 310, 242, 330);
-			NIVision.imaqDrawShapeOnImage(frame, frame, rect, DrawMode.DRAW_VALUE, ShapeMode.SHAPE_RECT, 0.0f);
-			NIVision.imaqWriteJPEGFile(frame, "/home/lvuser/SampleImages/image-4.jpg", 1000, null);
+			rect.free();
+			
+			NIVision.imaqWriteJPEGFile(frame, "/home/lvuser/SampleImages/shapes.jpg", 1000, null);
 		} 
 
 		Util.consoleLog("IsTarget=%b", isTarget);
@@ -191,16 +244,16 @@ public class Vision2016
 		double boundingArea = (report.BoundingRectBottom - report.BoundingRectTop) * (report.BoundingRectRight - report.BoundingRectLeft);
 		// Tape is 7" edge so 49" bounding rect. With 2" wide tape it covers 24" of the rect.
 		//return ratioToScore((49 / 24) * report.Area / boundingArea);
-		// For 2016, the target is 20w x 12h. So bounding rect is 240". With 2" tape, I guess the coverage is 160".
-		return ratioToScore((240 / 160) * report.Area / boundingArea);
+		// For 2016, the target is 20w x 12h. So bounding rect is 240". With 2" tape, I guess the coverage is 48".
+		return ratioToScore((240 / 48) * report.Area / boundingArea);
 	}
 
 	/**
-	 * Method to score if the aspect ratio of the particle appears to match the retro-reflective target. Target is 7"x7" so aspect should be 1
+	 * Method to score if the aspect ratio of the particle appears to match the retro-reflective target. Target is 20"x12" so aspect should be 1.6
 	 */
 	private double AspectScore(ParticleReport report)
 	{
-		return ratioToScore(((report.BoundingRectRight-report.BoundingRectLeft)/(report.BoundingRectBottom-report.BoundingRectTop)));
+		return ratioToScore(((report.BoundingRectRight - report.BoundingRectLeft) / (report.BoundingRectBottom - report.BoundingRectTop)));
 	}
 
 	/**

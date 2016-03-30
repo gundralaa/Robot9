@@ -260,9 +260,15 @@ public class Shooter
 	    			sleep(6000);
 	    		}
 	    		
+	    		teleop.defenseArmsDown();
+	    		
 	    		PickupMotorIn(1.0);
+
+	    		sleep(500);
+	    		
+	    		teleop.defenseArmsUp();
 	    	
-	    		sleep(1000);
+	    		sleep(500);
 	    	}
 	    	catch (InterruptedException e) {}
 	    	catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}

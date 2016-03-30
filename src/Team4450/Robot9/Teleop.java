@@ -300,7 +300,7 @@ class Teleop
 		defenseArmsValve.SetB();
 	}
 
-	void defenseAmrsDown()
+	void defenseArmsDown()
 	{
 		Util.consoleLog();
 		
@@ -386,7 +386,7 @@ class Teleop
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.BUTTON_RED))
 			{
 				if (launchPadEvent.control.latchedState)
-    				defenseAmrsDown();
+    				defenseArmsDown();
     			else
     				defenseArmsUp();
 			}
