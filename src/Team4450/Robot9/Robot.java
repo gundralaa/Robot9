@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-03.29.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-04.01.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -63,7 +63,7 @@ public class Robot extends SampleRobot
     
   //static final String  	CAMERA_IP = "10.44.50.11";
   static final int	   	USB_CAMERA = 2;
-  //static final int     	IP_CAMERA = 3;
+  static final int     	IP_CAMERA = 3;
  
   // PWM port assignments:
   // 0 - shooter motor
@@ -206,6 +206,8 @@ public class Robot extends SampleRobot
 		  SmartDashboard.putBoolean("PickupMotor", false);
 		  SmartDashboard.putBoolean("LSOverride", false);
 		  SmartDashboard.putBoolean("ShooterLowPower", false);
+		  SmartDashboard.putBoolean("AutoTarget", false);
+		  SmartDashboard.putBoolean("TargetLocked", false);
 
 		  //Grip.suspendGrip(true);
 		  
@@ -282,7 +284,7 @@ public class Robot extends SampleRobot
           // Start operator control process contained in the MyTeleop class.
         
           Teleop teleOp = new Teleop(this);
-        
+       
           teleOp.OperatorControl();
         
           teleOp.dispose();

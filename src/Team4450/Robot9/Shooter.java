@@ -2,10 +2,14 @@ package Team4450.Robot9;
 
 import Team4450.Lib.*;
 import Team4450.Lib.JoyStick.JoyStickButtonIDs;
+import Team4450.Lib.LaunchPad.LaunchPadControlIDs;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.Counter;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.SpeedController;
 import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class Shooter
@@ -20,7 +24,10 @@ public class Shooter
 	private final FestoDA			pickupCylinder = new FestoDA(6);
 	private final FestoDA			hoodCylinder = new FestoDA(4);
 	private final DigitalInput		pickupSwitch = new DigitalInput(0);
-	
+
+	// encoder is plugged into dio port 4 - orange=+5v blue=signal, dio port 5 black=gnd yellow=signal. 
+	public Encoder					encoder = new Encoder(4, 5, true, EncodingType.k4X);
+
 	private Thread					autoPickupThread, shootThread;
 
 	Shooter(Robot robot, Teleop teleop)
@@ -29,7 +36,11 @@ public class Shooter
 		
 		this.robot = robot;
 		this.teleop = teleop;
-
+	
+		// This is distance per pulse and our distance is 1 revolution since we want to measure
+		// rpm. We determined there are 1024 pulese in a rev so 1/1024 = .000976 rev per pulse.
+		encoder.setDistancePerPulse(.000976);
+		
 		// Handle the fact that the pickup motor is a CANTalon on competition robot
 		// and a pwm Talon on clone.
 		
@@ -65,6 +76,7 @@ public class Shooter
 		if (pickupCylinder != null) pickupCylinder.dispose();
 		if (hoodCylinder != null) hoodCylinder.dispose();
 		if (pickupSwitch != null) pickupSwitch.free();
+		if (encoder != null) encoder.free();
 	}
 
 	public void PickupArmUp()
@@ -260,15 +272,28 @@ public class Shooter
 	    			sleep(6000);
 	    		}
 	    		
-	    		teleop.defenseArmsDown();
+	    		// Pull defense arms back while shooting when shooter motor power is LOW.
+	    		
+	    		if (teleop != null)
+	    		{
+	    			if (teleop.launchPad.FindButton(LaunchPadControlIDs.ROCKER_RIGHT).latchedState)	teleop.defenseArmsDown();
+	    		}
 	    		
 	    		PickupMotorIn(1.0);
-
-	    		sleep(500);
 	    		
-	    		teleop.defenseArmsUp();
-	    	
-	    		sleep(500);
+	    		if (teleop != null)
+	    		{
+	    			if (teleop.launchPad.FindButton(LaunchPadControlIDs.ROCKER_RIGHT).latchedState)	
+	    			{
+	    	    		sleep(500);
+	    				teleop.defenseArmsUp();
+	    	    		sleep(500);
+	    			}
+	    			else
+	    				sleep(1000);
+	    		}
+	    		else
+	    			sleep(1000);
 	    	}
 	    	catch (InterruptedException e) {}
 	    	catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}

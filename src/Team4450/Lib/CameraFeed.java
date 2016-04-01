@@ -23,7 +23,6 @@ public class CameraFeed extends Thread
 	private CameraServer 	server;
 	private boolean			cameraChangeInProgress;
 	private Robot			robot;
-	private Vision2016		vision = new Vision2016();
 	
 	/**
 	 * @param robot Robot class instance.
@@ -117,11 +116,11 @@ public class CameraFeed extends Thread
 		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
 	}
 	
-	public void CheckForTarget()
+	public Image CurrentImage()
 	{
 		Util.consoleLog();
 		
-		vision.CheckTarget(frame);
+		return frame;
 	}
 	/**
 	 * Stop feed, ie close camera stream.

@@ -18,20 +18,25 @@ class Teleop
 {
 	private final Robot 		robot;
 	public  JoyStick			rightStick, leftStick, utilityStick;
-	private LaunchPad			launchPad;
+	public  LaunchPad			launchPad;
 	private final FestoDA		shifterValve = new FestoDA(2);
 	private final FestoDA		ptoValve = new FestoDA(0);
 	private final FestoDA		tiltValve = new FestoDA(1, 0);
 	private final FestoDA		climberArmsValve = new FestoDA(1, 2);
 	private final FestoDA		defenseArmsValve = new FestoDA(1, 4);
 	private boolean				ptoMode = false, invertDrive = false, limitSwitchEnabled = true;
+	private boolean				autoTarget = false;
 	private double				shooterPower = 1.0;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
 	//private final RevDigitBoard	revBoard = RevDigitBoard.getInstance();
 	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
 	private final Shooter		shooter;
 	private final DigitalInput	climbUpSwitch = new DigitalInput(3);
+
+	private Vision2016					vision = new Vision2016();
+	private Vision2016.ParticleReport 	par;
 	
+
 	// encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
 	private Encoder				encoder = new Encoder(1, 2, true, EncodingType.k4X);
 
@@ -165,13 +170,15 @@ class Teleop
 			LCD.printLine(3, "encoder=%d  climbUp=%b", encoder.get(), climbUpSwitch.get());
 			LCD.printLine(4, "leftY=%.4f  rightY=%.4f", leftY, rightY);
 			LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
+			// encoder rate is revolutions per second.
+			LCD.printLine(6, "shooter encoder=%d  rate=%.3f", shooter.encoder.get(), shooter.encoder.getRate() * 60);
 
 			// This corrects stick alignment error when trying to drive straight. 
 			//if (Math.abs(rightY - leftY) < 0.2) rightY = leftY;
 			
 			// Set wheel motors.
 
-			robot.robotDrive.tankDrive(leftY, rightY);
+			if (!autoTarget) robot.robotDrive.tankDrive(leftY, rightY);
 
 			// End of driving loop.
 			
@@ -320,6 +327,78 @@ class Teleop
 //		SmartDashboard.putBoolean("Light", false);
 //	}
 	
+	/**
+	 * Rotate the robot by bumping appropriate motors based on the X offset
+	 * from center of camera image. 
+	 * @param value Target offset. + value means target is right of center so
+	 * run right side motors backwards. - value means target is left of ceneter so run
+	 * left side motors backwards.
+	 */
+	void bump(int value)
+	{
+		Util.consoleLog("%d", value);
+
+		if (value > 0)
+			robot.robotDrive.tankDrive(.60, 0);
+		else
+			robot.robotDrive.tankDrive(0, .60);
+			
+		Timer.delay(.10);
+	}
+	
+    /**
+     * Check current camera image for the target. 
+     * @return A particle report for the target.
+     */
+	Vision2016.ParticleReport findTarget()
+	{
+		Util.consoleLog();
+		
+		par = vision.CheckForTarget(robot.cameraThread.CurrentImage());
+		
+		if (par != null) Util.consoleLog("Target=%s", par.toString());
+		
+		return par;
+	}
+	
+	/**
+	 * Loops checking camera images for target. Stops when no target found.
+	 * If target found, check target X location and if needed bump the bot
+	 * in the appropriate direction and then check target location again.
+	 */
+	void seekTarget()
+	{
+		Vision2016.ParticleReport par;
+		
+		Util.consoleLog();
+
+		SmartDashboard.putBoolean("TargetLocked", false);
+		SmartDashboard.putBoolean("AutoTarget", true);
+
+		par = findTarget();
+
+		autoTarget = true;
+		
+		while (robot.isEnabled() && autoTarget && par != null)
+		{
+			if (Math.abs(320 - par.CenterX) > 10)
+			{
+				bump(320 - par.CenterX);
+				
+				par = findTarget();
+			}
+			else
+			{
+				SmartDashboard.putBoolean("TargetLocked", true);
+				par = null;
+			}
+		}
+		
+		autoTarget = false;
+
+		SmartDashboard.putBoolean("AutoTarget", false);
+	}
+	
 	// Handle LaunchPad control events.
 	
 	public class LaunchPadListener implements LaunchPadEventListener 
@@ -369,7 +448,11 @@ class Teleop
 
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE_RIGHT)
 			{
-				robot.cameraThread.CheckForTarget();
+				// Start auto targeting on button push, stop on next button push.
+				if (!autoTarget)
+					seekTarget();
+				else
+					autoTarget = false;
 			}
 
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_RED_RIGHT)
