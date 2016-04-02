@@ -171,7 +171,8 @@ class Teleop
 			LCD.printLine(4, "leftY=%.4f  rightY=%.4f", leftY, rightY);
 			LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
 			// encoder rate is revolutions per second.
-			LCD.printLine(6, "shooter encoder=%d  rate=%.3f", shooter.encoder.get(), shooter.encoder.getRate() * 60);
+			LCD.printLine(6, "shooter encoder=%d  rate=%.0f  spsc=%.2f", shooter.encoder.get(), shooter.encoder.getRate() * 60, shooter.shooterMotorControl.get());
+			//LCD.printLine(7, "shooterspeedsource=%.0f", shooter.shooterSpeedSource.pidGet());
 
 			// This corrects stick alignment error when trying to drive straight. 
 			//if (Math.abs(rightY - leftY) < 0.2) rightY = leftY;
@@ -501,7 +502,7 @@ class Teleop
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_RIGHT))
 				if (launchPadEvent.control.latchedState)
 				{
-					shooterPower = 0.70;
+					shooterPower = Shooter.SHOOTER_LOW_POWER;
 					SmartDashboard.putBoolean("ShooterLowPower", true);
 				}
 				else
