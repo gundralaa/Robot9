@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-04.01.16-02";
+  static final String  	PROGRAM_NAME = "RAC9-04.12.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -82,11 +82,11 @@ public class Robot extends SampleRobot
 	try
 	{
 		Util.CustomLogger.setup();
-//    }
-//    catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
-//      
-//    try
-//    {
+    }
+    catch (Throwable e) {Util.logException(e);}
+      
+    try
+    {
     	Util.consoleLog(PROGRAM_NAME);
     
         ds = DriverStation.getInstance();
@@ -117,6 +117,13 @@ public class Robot extends SampleRobot
    		//SmartDashboard.putBoolean("CompressorEnabled", false);
    		SmartDashboard.putBoolean("CompressorEnabled", Boolean.parseBoolean(robotProperties.getProperty("CompressorEnabledByDefault")));
 
+   		SmartDashboard.putBoolean("PIDEnabled", true);
+   		SmartDashboard.putNumber("PValue", Shooter.PVALUE);
+   		SmartDashboard.putNumber("IValue", Shooter.IVALUE);
+   		SmartDashboard.putNumber("DValue", Shooter.DVALUE);
+   		SmartDashboard.putNumber("LowSetting", Shooter.SHOOTER_LOW_RPM);
+   		SmartDashboard.putNumber("HighSetting", Shooter.SHOOTER_HIGH_RPM);
+   		
    		// Reset PDB & PCM sticky faults.
       
    		PDP.clearStickyFaults();

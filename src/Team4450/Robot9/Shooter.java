@@ -32,10 +32,12 @@ public class Shooter
 	public Encoder					encoder = new Encoder(4, 5, true, EncodingType.k4X);
 	
 	private final PIDController		shooterPidController;
-	public static double			SHOOTER_LOW_POWER = .70;
+	public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = .58;
+	public static double			SHOOTER_LOW_RPM = 5250, SHOOTER_HIGH_RPM = 6900;
+	public static double			PVALUE = .001, IVALUE = 0.0, DVALUE = .001;
 	public ShooterSpeedController	shooterMotorControl = new ShooterSpeedController();
 	public ShooterSpeedSource		shooterSpeedSource = new ShooterSpeedSource();
-	private Thread					autoPickupThread, shootThread;
+	private Thread					autoPickupThread, autoSpitBallThread, shootThread;
 
 	Shooter(Robot robot, Teleop teleop)
 	{
@@ -125,52 +127,74 @@ public class Shooter
 		hoodCylinder.SetA();
 	}
 	//----------------------------------------
-	public void PickupMotorIn(double speed)
+	/**
+	 * Starts pickup motor in intake direction.
+	 * @param power Power level to use 0.0 to +1.0.
+	 */
+	public void PickupMotorIn(double power)
 	{
-		Util.consoleLog("%f", speed);
+		Util.consoleLog("%f", power);
 
-		pickupMotor.set(speed);
+		pickupMotor.set(power);
 	}
 	//----------------------------------------
-	public void PickupMotorOut(double speed)
+	/**
+	 * Starts pickup motor in output direction.
+	 * @param power Power level to use 0.0 to +1.0.
+	 */
+	public void PickupMotorOut(double power)
 	{
-		Util.consoleLog("%f", speed);
+		Util.consoleLog("%f", power);
 		
-		pickupMotor.set(Math.abs(speed) * -1);
+		pickupMotor.set(Math.abs(power) * -1);
 		SmartDashboard.putBoolean("PickupMotor", true);
 	}
 	//----------------------------------------
+	/**
+	 * Stop pickup motor.
+	 */
 	public void PickupMotorStop()
 	{
 		Util.consoleLog();
 		
 		pickupMotor.set(0);
+		if (teleop != null) teleop.launchPad.FindButton(LaunchPadControlIDs.BUTTON_RED_RIGHT).latchedState = false;
 		SmartDashboard.putBoolean("PickupMotor", false);
 	}
 	//----------------------------------------
-	public void ShooterMotorStart(double speed)
+	/**
+	 * Start shooter motors.
+	 * @param power Power level to use 0.0 to +1.0.
+	 */
+	public void ShooterMotorStart(double power)
 	{
-		Util.consoleLog("%f", speed);
+		Util.consoleLog("%.2f", power);
 	
-		if (speed == SHOOTER_LOW_POWER)
+		if (SmartDashboard.getBoolean("PIDEnabled", true))
 		{
-			// When shooting a low power, we will attempt to maintain a constant wheel speed (rpm)
-			// using pid controller measuring rpm via the encoder. RPM determined experimentally.
-			// This call starts the pid controller and turns shooter motor control over to it.
-			// The pid will run the motors on its own until disabled.
-			holdShooterRPM(5000);
+    		if (power == SHOOTER_LOW_POWER)
+    			// When shooting a low power, we will attempt to maintain a constant wheel speed (rpm)
+    			// using pid controller measuring rpm via the encoder. RPM determined experimentally
+    			// by setting motors to the low power value and seeing what rpm results.
+    			// This call starts the pid controller and turns shooter motor control over to it.
+    			// The pid will run the motors on its own until disabled.
+    			holdShooterRPM(SmartDashboard.getNumber("LowSetting", SHOOTER_LOW_RPM));
+    		else if (power == SHOOTER_HIGH_POWER)
+    			// We later decided to use pid for high power shot when high power was reduced from 100%.
+    			holdShooterRPM(SmartDashboard.getNumber("HighSetting", SHOOTER_HIGH_RPM));
+    		else
+    			// Set power directly for any value other than the defined high and low values.
+    			shooterMotorControl.set(power);
 		}
 		else
-		{
-			shooterMotorControl.set(speed);
+			shooterMotorControl.set(power);
 			
-//			shooterMotor1.set(speed);
-//			shooterMotor2.set(speed);
-		}
-		
 		SmartDashboard.putBoolean("ShooterMotor", true);
 	}
 	//----------------------------------------
+	/**
+	 * Stops shooter motors.
+	 */
 	public void ShooterMotorStop()
 	{
 		Util.consoleLog();
@@ -179,13 +203,13 @@ public class Shooter
 
 		shooterMotorControl.set(0);
 		
-		//shooterMotor1.set(0);
-		//shooterMotor2.set(0);
-		
 		if (teleop != null) teleop.rightStick.FindButton(JoyStickButtonIDs.TOP_LEFT).latchedState = false;
 		SmartDashboard.putBoolean("ShooterMotor", false);
 	}
 	//----------------------------------------
+	/**
+	 * Start auto pickup thread.
+	 */
 	public void StartAutoPickup()
 	{
 		Util.consoleLog();
@@ -196,6 +220,9 @@ public class Shooter
 		autoPickupThread.start();
 	}
 	//----------------------------------------
+	/**
+	 * Stops auto pickup thread.
+	 */
 	public void StopAutoPickup()
 	{
 		Util.consoleLog();
@@ -205,6 +232,7 @@ public class Shooter
 		autoPickupThread = null;
 	}
 
+	//----------------------------------------
 	// Automatic ball pickup thread.
 	
 	private class AutoPickup extends Thread
@@ -242,26 +270,71 @@ public class Shooter
 			autoPickupThread = null;
 	    }
 	}	// end of AutoPickup thread class.
+
 	//----------------------------------------
-//	public void StartAutoShoot()
-//	{
-//		Util.consoleLog();
-//		
-//		if (shootThread != null) return;
-//		
-//		shootThread = new Shoot(true);
-//		shootThread.start();
-//	}
+	/**
+	 * Start auto ball spitting thread.
+	 */
+	public void StartAutoBallSpit()
+	{
+		Util.consoleLog();
+		
+		if (autoSpitBallThread != null) return;
+
+		autoSpitBallThread = new AutoSpitBall();
+		autoSpitBallThread.start();
+	}
 	//----------------------------------------
-//	public void StopAutoShoot()
-//	{
-//		Util.consoleLog();
-//
-//		if (shootThread != null) shootThread.interrupt();
-//		
-//		shootThread = null;
-//	}
+	/**
+	 * Stops auto ball spitting thread.
+	 */
+	public void StopAutoBallSpit()
+	{
+		Util.consoleLog();
+
+		if (autoSpitBallThread != null) autoSpitBallThread.interrupt();
+		
+		autoSpitBallThread = null;
+	}
 	//----------------------------------------
+	// Automatic ball spitting thread.
+	
+	private class AutoSpitBall extends Thread
+	{
+		AutoSpitBall()
+		{
+			Util.consoleLog();
+			
+			this.setName("AutoSpitBall");
+	    }
+		
+	    public void run()
+	    {
+	    	Util.consoleLog();
+	    	
+	    	try
+	    	{
+	    		PickupArmDown();
+	    		sleep(250);
+	    		PickupMotorOut(1.0);
+	    		
+   	            sleep(2000);
+	    	}
+	    	catch (InterruptedException e) {}
+	    	catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+
+	    	PickupMotorStop();
+			PickupArmUp();
+			
+			autoSpitBallThread = null;
+	    }
+	}	// end of AutoSpitBall thread class.
+
+	//----------------------------------------
+	/**
+	 * Start auto shoot thread.
+	 * @param spinUpMotors True to handle shooter motor spinup, false to leave spinup to driver.
+	 */
 	public void StartShoot(boolean spinUpMotors)
 	{
 		Util.consoleLog();
@@ -272,6 +345,9 @@ public class Shooter
 		shootThread.start();
 	}
 	//----------------------------------------
+	/**
+	 * Stop auto shoot thread.
+	 */
 	public void StopShoot()
 	{
 		Util.consoleLog();
@@ -321,9 +397,9 @@ public class Shooter
 	    		{
 	    			if (teleop.launchPad.FindButton(LaunchPadControlIDs.ROCKER_RIGHT).latchedState)	
 	    			{
-	    	    		sleep(500);
+	    	    		sleep(550);
 	    				teleop.defenseArmsUp();
-	    	    		sleep(500);
+	    	    		sleep(600);
 	    			}
 	    			else
 	    				sleep(1000);
@@ -341,19 +417,28 @@ public class Shooter
 	    }
 	}	// end of Shoot thread class.
 	
-	// Automatically hold shooter motor speed (rpm). Starts PID controller to
-	// manage motor power to maintain rpm target.
+	/**
+	 * Automatically hold shooter motor speed (rpm). Starts PID controller to
+	 * manage motor power to maintain rpm target.
+	 * @param rpm RPM to hold.
+	 */
 	void holdShooterRPM(double rpm)
 	{
-		Util.consoleLog("%.0f", rpm);
+		double pValue = SmartDashboard.getNumber("PValue", PVALUE);
+		double iValue = SmartDashboard.getNumber("IValue", IVALUE);
+		double dValue = SmartDashboard.getNumber("DValue", DVALUE);
+
+		Util.consoleLog("%.0f  p=%.4f  i=%.4f  d=%.4f", rpm, pValue, iValue, dValue);
 		
 		// p,i,d values are a guess.
 		// f value is the base motor speed, which is where (power) we start.
 		// setpoint is target rpm converted to rev/sec.
 		// The idea is that we apply power to get rpm up to set point and then maintain.
-		shooterPidController.setPID(0.001, 0.001, 0.0, 0.0); 
-		shooterPidController.setSetpoint(rpm / 60);
-		shooterPidController.setPercentTolerance(1);	// 5% error.
+		//shooterPidController.setPID(0.001, 0.001, 0.0, 0.0); 
+		shooterPidController.setPID(pValue, iValue, dValue, 0.0); 
+		shooterPidController.setSetpoint(rpm / 60);		// setpoint is revolutions per second.
+		shooterPidController.setPercentTolerance(5);	// 5% error.
+		shooterPidController.setToleranceBuffer(2048);
 		//encoder.reset();
 		shooterSpeedSource.reset();
 		shooterPidController.enable();
@@ -427,6 +512,8 @@ public class Shooter
 	// the PID controller.
 	private class ShooterSpeedSource implements PIDSource
 	{
+		private double rpmAccumulator, rpmSampleCount;
+		
 		@Override
 		public void setPIDSourceType(PIDSourceType pidSource)
 		{
@@ -439,16 +526,29 @@ public class Shooter
 			return encoder.getPIDSourceType();
 		}
 
-		@Override
+		/**
+		 * Return the current rotational rate of the encoder.
+		 * @return Revolutions per second.
+		 */
 		public double pidGet()
 		{
 			// TODO: Some sort of smoothing could be done to damp out the
-			// fluctuations in encoder rate (rpm).
+			// fluctuations in encoder rate.
+			
+//			if (rpmSampleCount > 2048) rpmAccumulator = rpmSampleCount = 0;
+//			
+//			rpmAccumulator += encoder.getRate();
+//			rpmSampleCount += 1;
+//			
+//			return rpmAccumulator / rpmSampleCount;
+			
 			return encoder.getRate();
 		}
 		
 		public void reset()
 		{
+			rpmAccumulator = rpmSampleCount = 0;
+			
 			encoder.reset();
 		}
 	}

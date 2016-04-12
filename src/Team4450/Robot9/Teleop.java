@@ -24,9 +24,9 @@ class Teleop
 	private final FestoDA		tiltValve = new FestoDA(1, 0);
 	private final FestoDA		climberArmsValve = new FestoDA(1, 2);
 	private final FestoDA		defenseArmsValve = new FestoDA(1, 4);
-	private boolean				ptoMode = false, invertDrive = false, limitSwitchEnabled = true;
-	private boolean				autoTarget = false;
-	private double				shooterPower = 1.0;
+	private boolean				ptoMode = false, invertDrive = false, limitSwitchEnabled = false;
+	private boolean				autoTarget = false, climbPrepEnabled = false, climbPrepInProgress = false;
+	private double				shooterPower = Shooter.SHOOTER_HIGH_POWER;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
 	//private final RevDigitBoard	revBoard = RevDigitBoard.getInstance();
 	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
@@ -179,7 +179,7 @@ class Teleop
 			
 			// Set wheel motors.
 
-			if (!autoTarget) robot.robotDrive.tankDrive(leftY, rightY);
+			if (!autoTarget & !climbPrepInProgress) robot.robotDrive.tankDrive(leftY, rightY);
 
 			// End of driving loop.
 			
@@ -231,6 +231,7 @@ class Teleop
 	
 	// Transmission control functions.
 	
+	//--------------------------------------
 	void shifterLow()
 	{
 		Util.consoleLog();
@@ -240,7 +241,7 @@ class Teleop
 		SmartDashboard.putBoolean("Low", true);
 		SmartDashboard.putBoolean("High", false);
 	}
-	//--------------------------------------
+
 	void shifterHigh()
 	{
 		Util.consoleLog();
@@ -250,6 +251,7 @@ class Teleop
 		SmartDashboard.putBoolean("Low", false);
 		SmartDashboard.putBoolean("High", true);
 	}
+	
 	//--------------------------------------
 	void ptoDisable()
 	{
@@ -261,7 +263,7 @@ class Teleop
 
 		SmartDashboard.putBoolean("PTO", false);
 	}
-	//--------------------------------------
+	
 	void ptoEnable()
 	{
 		Util.consoleLog();
@@ -272,6 +274,9 @@ class Teleop
 		
 		SmartDashboard.putBoolean("PTO", true);
 	}
+	
+	// Misc control functions.
+	
 	//--------------------------------------
 	void tiltUp()
 	{
@@ -286,6 +291,7 @@ class Teleop
 		
 		tiltValve.SetB();
 	}
+	
 	//--------------------------------------
 	void climberArmsUp()
 	{
@@ -300,6 +306,7 @@ class Teleop
 		
 		climberArmsValve.SetA();
 	}
+	
 	//--------------------------------------
 	void defenseArmsUp()
 	{
@@ -314,6 +321,27 @@ class Teleop
 		
 		defenseArmsValve.SetA();
 	}
+
+	//--------------------------------------
+	void climbPrep()
+	{
+		Util.consoleLog();
+		
+		tiltDown();		// deploy foot to hold position.
+
+		climbPrepInProgress = true;
+		
+		ptoEnable();	// shift to pto mode.
+		
+		robot.robotDrive.tankDrive(-.2, -.2);	// jog motors.
+		
+		Timer.delay(.25);
+		
+		robot.robotDrive.tankDrive(0, 0);
+
+		climbPrepInProgress = false;
+	}
+	
 	//--------------------------------------
 //	void lightOn()
 //	{
@@ -415,11 +443,16 @@ class Teleop
 					shooter.HoodDown();
 			
 			if (launchPadEvent.control.id.equals(LaunchPad.LaunchPadControlIDs.BUTTON_BLACK))
-				if (launchPadEvent.control.latchedState)
-					shooter.PickupArmDown();
+				if (climbPrepEnabled)
+					climbPrep();
 				else
-					shooter.PickupArmUp();
-	
+				{
+    				if (launchPadEvent.control.latchedState)
+    					shooter.PickupArmDown();
+    				else
+    					shooter.PickupArmUp();
+				}
+			
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE)
 			{
 				if (launchPadEvent.control.latchedState)
@@ -449,22 +482,32 @@ class Teleop
 
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE_RIGHT)
 			{
-				// Start auto targeting on button push, stop on next button push.
-				if (!autoTarget)
-					seekTarget();
+				if (launchPadEvent.control.latchedState)
+					climberArmsDown();
 				else
-					autoTarget = false;
+    				climberArmsUp();
+				
+				// Start auto targeting on button push, stop on next button push.
+//				if (!autoTarget)
+//					seekTarget();
+//				else
+//					autoTarget = false;
 			}
 
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_RED_RIGHT)
 			{
-				limitSwitchEnabled = !limitSwitchEnabled;
-				SmartDashboard.putBoolean("LSOverride", !limitSwitchEnabled);
+//				limitSwitchEnabled = !limitSwitchEnabled;
+//				SmartDashboard.putBoolean("LSOverride", !limitSwitchEnabled);
 
 //				if (launchPadEvent.control.latchedState)
 //					lightOn();
 //				else
 //					lightOff();
+
+				if (launchPadEvent.control.latchedState)
+					shooter.StartAutoBallSpit();
+				else
+					shooter.StopAutoBallSpit();
 			}
 			
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.BUTTON_RED))
@@ -495,9 +538,14 @@ class Teleop
 			
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_LEFT_BACK))
 				if (launchPadEvent.control.latchedState)
-					robot.SetCANTalonNeutral(false);	// coast
-				else
-					robot.SetCANTalonNeutral(true);		// brake
+				climbPrepEnabled = true;
+			else
+				climbPrepEnabled = false;
+			
+//				if (launchPadEvent.control.latchedState)
+//					robot.SetCANTalonNeutral(false);	// coast
+//				else
+//					robot.SetCANTalonNeutral(true);		// brake
 			
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_RIGHT))
 				if (launchPadEvent.control.latchedState)
@@ -507,7 +555,7 @@ class Teleop
 				}
 				else
 				{
-					shooterPower = 1.0;
+					shooterPower = Shooter.SHOOTER_HIGH_POWER;
 					SmartDashboard.putBoolean("ShooterLowPower", false);
 				}
 	    }

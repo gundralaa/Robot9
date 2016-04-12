@@ -1,6 +1,7 @@
 
 package Team4450.Lib;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -21,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.can.CANJNI;
 
 public class Util
@@ -100,8 +102,11 @@ public class Util
             
             //if (true) throw new IOException("Test Exception");
             
-            fileTxt = new FileHandler("/home/lvuser/Logging.txt");
-
+            if (new File("/home/lvuser/Logging.txt.99").exists() != true)
+            	fileTxt = new FileHandler("/home/lvuser/Logging.txt");
+            else
+            	throw new IOException("Max number of log files reached.");
+            
             fileTxt.setFormatter(logFormatter);
 
             logger.addHandler(fileTxt);
@@ -249,8 +254,8 @@ public class Util
     
     /**
      * Write message to console log with optional formatting and program location.
-     * @param message message with optional format specifiers for listed parameters
-     * @param parms parameter list matching format specifiers
+     * @param message Message with optional format specifiers for listed parameters.
+     * @param parms Parameter list matching format specifiers.
      */
 	public static void consoleLog(String message, Object... parms)
 	{
@@ -265,6 +270,17 @@ public class Util
 	{
 		// logs to the console as well as our log file on RR disk.
 		logger.log(Level.INFO, String.format("robot: %s", currentMethod(2)));
+	}
+
+	/**
+	 * Write exception message to console window and exception stack trace to
+	 * log file.
+	 * @param e The exception to log.
+	 */
+	public static void logException(Throwable e)
+	{
+		DriverStation.reportError(e.getMessage(), false);
+		e.printStackTrace(Util.logPrintStream);
 	}
 
 	/** helper routine to get last received message for a given ID */
