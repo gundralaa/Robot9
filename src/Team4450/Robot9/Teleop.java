@@ -37,8 +37,10 @@ class Teleop
 	private Vision2016.ParticleReport 	par;
 	
 
-	// encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
+	// Encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
 	private Encoder				encoder = new Encoder(1, 2, true, EncodingType.k4X);
+	
+	// Encoder ribbon cable to dio ports: ribbon wire 2 = orange, 5 = yellow, 7 = blue, 10 = black
 
 	// Constructor.
 	
@@ -164,22 +166,25 @@ class Teleop
 //				rightY = rightStick.GetY();				// fwd/back right
 //    			leftY = leftStick.GetY();				// fwd/back left
 				rightY = stickLogCorrection(rightStick.GetY());	// fwd/back right
-    			leftY = stickLogCorrection(leftStick.GetY());		// fwd/back left
+    			leftY = stickLogCorrection(leftStick.GetY());	// fwd/back left
 			}
 			
 			LCD.printLine(3, "encoder=%d  climbUp=%b", encoder.get(), climbUpSwitch.get());
 			LCD.printLine(4, "leftY=%.4f  rightY=%.4f", leftY, rightY);
 			LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
 			// encoder rate is revolutions per second.
-			LCD.printLine(6, "shooter encoder=%d  rate=%.0f  spsc=%.2f", shooter.encoder.get(), shooter.encoder.getRate() * 60, shooter.shooterMotorControl.get());
+			LCD.printLine(6, "encoder=%d rpm=%.0f pwr=%.2f pwrR=%.2f", shooter.shooterSpeedSource.get(), 
+							shooter.shooterSpeedSource.getRate() * 60, shooter.shooterMotorControl.get(),
+							shooter.shooterMotorControl.get());
 			//LCD.printLine(7, "shooterspeedsource=%.0f", shooter.shooterSpeedSource.pidGet());
 
 			// This corrects stick alignment error when trying to drive straight. 
 			//if (Math.abs(rightY - leftY) < 0.2) rightY = leftY;
 			
 			// Set wheel motors.
+			// Do not feed JS input to robotDrive if we are controlling the motors in automatic functions.
 
-			if (!autoTarget & !climbPrepInProgress) robot.robotDrive.tankDrive(leftY, rightY);
+			if (!autoTarget && !climbPrepInProgress) robot.robotDrive.tankDrive(leftY, rightY);
 
 			// End of driving loop.
 			
@@ -323,21 +328,37 @@ class Teleop
 	}
 
 	//--------------------------------------
+	// Automatically prepare for climb. Drive on batter press black button.
+	// We deploy kicker, shift to PTO, disable joystick control of motors,
+	// jog motors backwards a bit to facilitate shifting to PTO. Then run
+	// climber arms up to near max height. Reenable joystick control of motors.
 	void climbPrep()
 	{
 		Util.consoleLog();
 		
 		tiltDown();		// deploy foot to hold position.
+		
+		launchPad.FindButton(LaunchPadControlIDs.BUTTON_GREEN).latchedState = true;	// reset button state for tilt.
 
 		climbPrepInProgress = true;
 		
 		ptoEnable();	// shift to pto mode.
 		
-		robot.robotDrive.tankDrive(-.2, -.2);	// jog motors.
+		launchPad.FindButton(LaunchPadControlIDs.BUTTON_BLUE).latchedState = true;	// reset button state for pto.
+
+		robot.robotDrive.setSafetyEnabled(false);
+
+		robot.robotDrive.tankDrive(-.4, -.4);	// jog motors.
 		
-		Timer.delay(.25);
+		Timer.delay(.3);
+
+		robot.robotDrive.tankDrive(.8, .8);		// raise arms.
 		
-		robot.robotDrive.tankDrive(0, 0);
+		Timer.delay(.6);
+		
+		robot.robotDrive.tankDrive(0, 0);		// stop arms.
+
+		robot.robotDrive.setSafetyEnabled(true);
 
 		climbPrepInProgress = false;
 	}
@@ -407,6 +428,7 @@ class Teleop
 		par = findTarget();
 
 		autoTarget = true;
+		robot.robotDrive.setSafetyEnabled(false);
 		
 		while (robot.isEnabled() && autoTarget && par != null)
 		{
@@ -424,6 +446,7 @@ class Teleop
 		}
 		
 		autoTarget = false;
+		robot.robotDrive.setSafetyEnabled(true);
 
 		SmartDashboard.putBoolean("AutoTarget", false);
 	}

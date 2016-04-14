@@ -30,13 +30,14 @@ public class Shooter
 
 	// encoder is plugged into dio port 4 - orange=+5v blue=signal, dio port 5 black=gnd yellow=signal. 
 	public Encoder					encoder = new Encoder(4, 5, true, EncodingType.k4X);
-	
-	private final PIDController		shooterPidController;
-	public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = .58;
+
+	public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = 1.0; //.58;
 	public static double			SHOOTER_LOW_RPM = 5250, SHOOTER_HIGH_RPM = 6900;
 	public static double			PVALUE = .001, IVALUE = 0.0, DVALUE = .001;
+	
+	private final PIDController		shooterPidController;
 	public ShooterSpeedController	shooterMotorControl = new ShooterSpeedController();
-	public ShooterSpeedSource		shooterSpeedSource = new ShooterSpeedSource();
+	public ShooterSpeedSource		shooterSpeedSource = new ShooterSpeedSource(encoder);
 	private Thread					autoPickupThread, autoSpitBallThread, shootThread;
 
 	Shooter(Robot robot, Teleop teleop)
@@ -53,6 +54,12 @@ public class Shooter
 		// Tells encoder to supply the rate as the input to any PID controller source.
 		encoder.setPIDSourceType(PIDSourceType.kRate);
 
+		// Invert encoder on clone since the encoder is mounted opposite and returns negative values.
+		// Encoder.setReverseDirection() does not seem to work...so ShooterSpeedSource takes care of it.
+		if (robot.robotProperties.getProperty("RobotId").equalsIgnoreCase("clone"))
+			shooterSpeedSource.setInverted(true);
+		
+		// Create PIDController using our custom PIDSource and SpeedController classes.
 		shooterPidController = new PIDController(0.0, 0.0, 0.0, shooterSpeedSource, shooterMotorControl);
 
 		// Handle the fact that the pickup motor is a CANTalon on competition robot
@@ -438,8 +445,7 @@ public class Shooter
 		shooterPidController.setPID(pValue, iValue, dValue, 0.0); 
 		shooterPidController.setSetpoint(rpm / 60);		// setpoint is revolutions per second.
 		shooterPidController.setPercentTolerance(5);	// 5% error.
-		shooterPidController.setToleranceBuffer(2048);
-		//encoder.reset();
+		shooterPidController.setToleranceBuffer(4096);	// 4 seconds of averaging.
 		shooterSpeedSource.reset();
 		shooterPidController.enable();
 	}
@@ -510,9 +516,16 @@ public class Shooter
 	
 	// Encapsulate the encoder so we could modify the rate returned to
 	// the PID controller.
-	private class ShooterSpeedSource implements PIDSource
+	public class ShooterSpeedSource implements PIDSource
 	{
-		private double rpmAccumulator, rpmSampleCount;
+		private Encoder	encoder;
+		private int		inversion = 1;
+		private double	rpmAccumulator, rpmSampleCount;
+		
+		public ShooterSpeedSource(Encoder encoder)
+		{
+			this.encoder = encoder;
+		}
 		
 		@Override
 		public void setPIDSourceType(PIDSourceType pidSource)
@@ -525,12 +538,21 @@ public class Shooter
 		{
 			return encoder.getPIDSourceType();
 		}
+		
+		public void setInverted(boolean inverted)
+		{
+			if (inverted)
+				inversion = -1;
+			else
+				inversion = 1;
+		}
 
-		/**
-		 * Return the current rotational rate of the encoder.
-		 * @return Revolutions per second.
-		 */
-		public double pidGet()
+		public int get()
+		{
+			return encoder.get() * inversion;
+		}
+		
+		public double getRate()
 		{
 			// TODO: Some sort of smoothing could be done to damp out the
 			// fluctuations in encoder rate.
@@ -541,8 +563,21 @@ public class Shooter
 //			rpmSampleCount += 1;
 //			
 //			return rpmAccumulator / rpmSampleCount;
-			
-			return encoder.getRate();
+
+			return encoder.getRate() * inversion;
+		}
+		
+		/**
+		 * Return the current rotational rate of the encoder or current value (count) to PID controllers.
+		 * @return Encoder revolutions per second or current count.
+		 */
+		@Override
+		public double pidGet()
+		{
+			if (encoder.getPIDSourceType() == PIDSourceType.kRate)
+				return getRate();
+			else
+				return get();
 		}
 		
 		public void reset()
