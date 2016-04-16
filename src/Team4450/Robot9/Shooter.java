@@ -31,9 +31,15 @@ public class Shooter
 	// encoder is plugged into dio port 4 - orange=+5v blue=signal, dio port 5 black=gnd yellow=signal. 
 	public Encoder					encoder = new Encoder(4, 5, true, EncodingType.k4X);
 
-	public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = 1.0; //.58;
-	public static double			SHOOTER_LOW_RPM = 5250, SHOOTER_HIGH_RPM = 6900;
-	public static double			PVALUE = .001, IVALUE = 0.0, DVALUE = .001;
+	// Competition robot defaults.
+	//public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = 1.0;
+	//public static double			SHOOTER_LOW_RPM = 5250, SHOOTER_HIGH_RPM = 6900;
+	//public static double			PVALUE = .001, IVALUE = 0.0, DVALUE = .001; 
+
+	// Clone robot defaults.
+	public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = 1.0;
+	public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 9500;
+	public static double			PVALUE = .002, IVALUE = .002, DVALUE = .004; 
 	
 	private final PIDController		shooterPidController;
 	public ShooterSpeedController	shooterMotorControl = new ShooterSpeedController();
@@ -46,7 +52,7 @@ public class Shooter
 		
 		this.robot = robot;
 		this.teleop = teleop;
-	
+		
 		// This is distance per pulse and our distance is 1 revolution since we want to measure
 		// rpm. We determined there are 1024 pulses in a rev so 1/1024 = .000976 rev per pulse.
 		encoder.setDistancePerPulse(.000976);
@@ -56,8 +62,7 @@ public class Shooter
 
 		// Invert encoder on clone since the encoder is mounted opposite and returns negative values.
 		// Encoder.setReverseDirection() does not seem to work...so ShooterSpeedSource takes care of it.
-		if (robot.robotProperties.getProperty("RobotId").equalsIgnoreCase("clone"))
-			shooterSpeedSource.setInverted(true);
+		if (robot.isClone) shooterSpeedSource.setInverted(true);
 		
 		// Create PIDController using our custom PIDSource and SpeedController classes.
 		shooterPidController = new PIDController(0.0, 0.0, 0.0, shooterSpeedSource, shooterMotorControl);
@@ -65,7 +70,7 @@ public class Shooter
 		// Handle the fact that the pickup motor is a CANTalon on competition robot
 		// and a pwm Talon on clone.
 		
-		if (robot.robotProperties.getProperty("RobotId").equals("comp")) 
+		if (robot.isComp) 
 		{
 			pickupMotor = new CANTalon(7);
 			robot.InitializeCANTalon((CANTalon) pickupMotor);
@@ -322,10 +327,12 @@ public class Shooter
 	    	try
 	    	{
 	    		PickupArmDown();
+    		
 	    		sleep(250);
+    		
 	    		PickupMotorOut(1.0);
 	    		
-   	            sleep(2000);
+	    		while (!isInterrupted()) sleep(1000);
 	    	}
 	    	catch (InterruptedException e) {}
 	    	catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
@@ -418,7 +425,7 @@ public class Shooter
 	    	catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
 
 	    	PickupMotorStop();
-    		ShooterMotorStop();
+    		//ShooterMotorStop();
     		
     		shootThread = null;
 	    }

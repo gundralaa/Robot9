@@ -44,7 +44,7 @@ public class CameraFeed extends Thread
     		
     		// Camera initialization based on robotid from properties file.
     		
-    		if (robot.robotProperties.getProperty("RobotId").equals("comp"))
+    		if (robot.isComp)
     		{
         		try
         		{
@@ -59,7 +59,7 @@ public class CameraFeed extends Thread
         		catch (Exception e) {}
     		}
     		
-    		if (robot.robotProperties.getProperty("RobotId").equalsIgnoreCase("clone"))
+    		if (robot.isClone)
     		{
     			Util.consoleLog("in clone");
     			

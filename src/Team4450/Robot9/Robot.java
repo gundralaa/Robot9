@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-04.13.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-04.15.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -47,6 +47,8 @@ public class Robot extends SampleRobot
   final AnalogGyro		gyro = new AnalogGyro(0);		// gyro must be plugged into analog port 0 or 1.
   
   public Properties		robotProperties;
+  
+  public boolean		isClone = false, isComp = false;
   
   PowerDistributionPanel PDP = new PowerDistributionPanel();
   
@@ -112,6 +114,13 @@ public class Robot extends SampleRobot
       
    		robotProperties = Util.readProperties();
       
+   		// Is this the competition or clone robot?
+   		
+		if (robotProperties.getProperty("RobotId").equals("comp"))
+			isComp = true;
+		else
+			isClone = true;
+
    		SmartDashboard.putString("Program", PROGRAM_NAME);
    		
    		//SmartDashboard.putBoolean("CompressorEnabled", false);
