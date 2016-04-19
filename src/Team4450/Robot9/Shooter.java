@@ -37,9 +37,9 @@ public class Shooter
 	//public static double			PVALUE = .001, IVALUE = 0.0, DVALUE = .001; 
 
 	// Clone robot defaults.
-	public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = 1.0;
+	public static double			SHOOTER_LOW_POWER = .45, SHOOTER_HIGH_POWER = 1.0;
 	public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 9500;
-	public static double			PVALUE = .002, IVALUE = .002, DVALUE = .004; 
+	public static double			PVALUE = .002, IVALUE = .002, DVALUE = .005; 
 	
 	private final PIDController		shooterPidController;
 	public ShooterSpeedController	shooterMotorControl = new ShooterSpeedController();
@@ -414,7 +414,7 @@ public class Shooter
 	    	    		sleep(550);
 	    				teleop.defenseArmsUp();
 	    	    		sleep(600);
-	    			}
+	   			}
 	    			else
 	    				sleep(1000);
 	    		}
@@ -425,7 +425,7 @@ public class Shooter
 	    	catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
 
 	    	PickupMotorStop();
-    		//ShooterMotorStop();
+    		ShooterMotorStop();
     		
     		shootThread = null;
 	    }

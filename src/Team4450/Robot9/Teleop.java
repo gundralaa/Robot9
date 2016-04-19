@@ -554,10 +554,14 @@ class Teleop
 	    	// Change which USB camera is being served by the RoboRio when using dual usb cameras.
 			
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_LEFT_FRONT))
+//				if (launchPadEvent.control.latchedState)
+//					robot.cameraThread.ChangeCamera(robot.cameraThread.cam2);
+//				else
+//					robot.cameraThread.ChangeCamera(robot.cameraThread.cam1);
 				if (launchPadEvent.control.latchedState)
-					robot.cameraThread.ChangeCamera(robot.cameraThread.cam2);
+					SmartDashboard.putBoolean("PIDEnabled", true);
 				else
-					robot.cameraThread.ChangeCamera(robot.cameraThread.cam1);
+					SmartDashboard.putBoolean("PIDEnabled", false);
 			
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_LEFT_BACK))
 				if (launchPadEvent.control.latchedState)
