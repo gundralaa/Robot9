@@ -32,9 +32,9 @@ public class Shooter
 	public Encoder					encoder = new Encoder(4, 5, true, EncodingType.k4X);
 
 	// Competition robot defaults.
-	//public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = 1.0;
-	//public static double			SHOOTER_LOW_RPM = 5250, SHOOTER_HIGH_RPM = 6900;
-	//public static double			PVALUE = .001, IVALUE = 0.0, DVALUE = .001; 
+	//public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = .60;
+	//public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 7800;
+	//public static double			PVALUE = .0025, IVALUE = 0.0025, DVALUE = .003; 
 
 	// Clone robot defaults.
 	public static double			SHOOTER_LOW_POWER = .45, SHOOTER_HIGH_POWER = 1.0;
@@ -176,7 +176,10 @@ public class Shooter
 	//----------------------------------------
 	/**
 	 * Start shooter motors.
-	 * @param power Power level to use 0.0 to +1.0.
+	 * @param power Power level to use 0.0 to +1.0. If PID is enabled, and the power is equal to
+	 * the low or high power constant, PID will be used to hold the low or high RPM as set on the
+	 * driver station and with the P I D values set on the DS. If any other value or PID is off,
+	 * the power value is used directly on the motors.
 	 */
 	public void ShooterMotorStart(double power)
 	{
@@ -349,13 +352,13 @@ public class Shooter
 	 * Start auto shoot thread.
 	 * @param spinUpMotors True to handle shooter motor spinup, false to leave spinup to driver.
 	 */
-	public void StartShoot(boolean spinUpMotors)
+	public void StartShoot(boolean spinUpMotors, double power)
 	{
 		Util.consoleLog();
 		
 		if (shootThread != null) return;
 		
-		shootThread = new Shoot(spinUpMotors);
+		shootThread = new Shoot(spinUpMotors, power);
 		shootThread.start();
 	}
 	//----------------------------------------
@@ -376,13 +379,15 @@ public class Shooter
 	private class Shoot extends Thread
 	{
 		boolean			spinUpMotors;
+		double			power;
 		
-		Shoot(boolean spinUpMotors)
+		Shoot(boolean spinUpMotors, double power)
 		{
 			Util.consoleLog();
 			
 			this.setName("Shoot");
 			this.spinUpMotors = spinUpMotors;
+			this.power = power;
 		}
 		
 	    public void run()
@@ -393,7 +398,7 @@ public class Shooter
 	    	{
 	    		if (spinUpMotors)
 	    		{
-	    			ShooterMotorStart(1.0);
+	    			ShooterMotorStart(power);
 
 	    			sleep(6000);
 	    		}

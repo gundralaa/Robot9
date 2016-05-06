@@ -102,7 +102,7 @@ public class Autonomous
 				
 				shoot.HoodUp();
 				
-				shoot.StartShoot(true);
+				shoot.StartShoot(true, Shooter.SHOOTER_HIGH_POWER);
 				
 				Timer.delay(8.0);	// Seconds.
 				

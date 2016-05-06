@@ -664,7 +664,7 @@ class Teleop
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
 			{
 				//lightOff();
-				shooter.StartShoot(false);
+				shooter.StartShoot(false, shooterPower);
 			}
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_RIGHT))

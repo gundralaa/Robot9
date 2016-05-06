@@ -4,6 +4,13 @@ FRC Team 4450 2016 Robot Control program.
 This is the 2016 competition robot control program created by the Olympia Robotics Federation (FRC Team 4450).
 Operates the robot "USS Kelvin" (an Einstein class starship) built for the FRC game "FIRST Stronghold".
 **************************************************************************************************************
+Version 9.3
+
+*	After return from St. Louis.
+
+R. Corn
+May 6, 2016
+
 Version 9.2
 
 *	Modified to automatically switch between CAN Talon RobotDrive (competition robot) and PWM Talon RobotDrive
