@@ -34,8 +34,6 @@ class Teleop
 	private final DigitalInput	climbUpSwitch = new DigitalInput(3);
 
 	private Vision2016					vision = new Vision2016();
-	private Vision2016.ParticleReport 	par;
-	
 
 	// Encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
 	private Encoder				encoder = new Encoder(1, 2, true, EncodingType.k4X);
@@ -378,43 +376,32 @@ class Teleop
 //	}
 	
 	/**
-	 * Rotate the robot by bumping appropriate motors based on the X offset
+	 * Rotate the robot by bumping appropriate motors based on the X axis offset
 	 * from center of camera image. 
-	 * @param value Target offset. + value means target is right of center so
-	 * run right side motors backwards. - value means target is left of ceneter so run
-	 * left side motors backwards.
+	 * @param value Target offset. + value means target is left of center so
+	 * run right side motors backwards. - value means target is right of center so run
+	 * left side motors backwards. Currently the magnitude of the offset is not used but
+	 * could be if we upgrade the movement function like using PID or ?
 	 */
 	void bump(int value)
 	{
 		Util.consoleLog("%d", value);
 
 		if (value > 0)
-			robot.robotDrive.tankDrive(.60, 0);
+			robot.robotDrive.tankDrive(.60, -.60);	// + turn right.
 		else
-			robot.robotDrive.tankDrive(0, .60);
+			robot.robotDrive.tankDrive(-.60, .60);	// - turn left.
 			
 		Timer.delay(.10);
-	}
-	
-    /**
-     * Check current camera image for the target. 
-     * @return A particle report for the target.
-     */
-	Vision2016.ParticleReport findTarget()
-	{
-		Util.consoleLog();
 		
-		par = vision.CheckForTarget(robot.cameraThread.CurrentImage());
-		
-		if (par != null) Util.consoleLog("Target=%s", par.toString());
-		
-		return par;
+		robot.robotDrive.tankDrive(0, 0);
 	}
 	
 	/**
 	 * Loops checking camera images for target. Stops when no target found.
 	 * If target found, check target X location and if needed bump the bot
 	 * in the appropriate direction and then check target location again.
+	 * Uses Vision2016 NI vision library based vision code.
 	 */
 	void seekTarget()
 	{
@@ -425,18 +412,18 @@ class Teleop
 		SmartDashboard.putBoolean("TargetLocked", false);
 		SmartDashboard.putBoolean("AutoTarget", true);
 
-		par = findTarget();
+		par = vision.CheckForTarget(robot.cameraThread.CurrentImage());
 
 		autoTarget = true;
 		robot.robotDrive.setSafetyEnabled(false);
 		
 		while (robot.isEnabled() && autoTarget && par != null)
 		{
-			if (Math.abs(320 - par.CenterX) > 10)
+			if (Math.abs(320 - par.CenterX) > 5)
 			{
 				bump(320 - par.CenterX);
 				
-				par = findTarget();
+				par = vision.CheckForTarget(robot.cameraThread.CurrentImage());
 			}
 			else
 			{
@@ -449,6 +436,57 @@ class Teleop
 		robot.robotDrive.setSafetyEnabled(true);
 
 		SmartDashboard.putBoolean("AutoTarget", false);
+	}
+
+	/**
+	 * Loops checking camera images for target. Stops when no target found.
+	 * If target found, check target X location and if needed bump the bot
+	 * in the appropriate direction and then check target location again.
+	 * Uses GRIP based vision code.
+	 */
+	void seekTargetGrip()
+	{
+		int				saveX = 0;
+		Grip.Contour	contour;
+		
+		Util.consoleLog();
+		
+		autoTarget = true;
+
+		Grip.suspendGrip(false);
+		
+		SmartDashboard.putBoolean("TargetLocked", false);
+		SmartDashboard.putBoolean("AutoTarget", autoTarget);
+
+		contour = Grip.getContoursReport().getContour(0);
+		robot.robotDrive.setSafetyEnabled(false);
+		
+		while (robot.isEnabled() && autoTarget && contour != null)
+		{
+			Util.consoleLog(contour.toString());
+
+			if (Math.abs(160 - (int) contour.centerX) > 5)
+			{
+				if (contour.centerX != saveX) bump(160 - (int) contour.centerX);
+
+				saveX = (int) contour.centerX;
+				
+				Timer.delay(.075);	// Grip running on Sean's Surface.
+				
+				contour = Grip.getContoursReport().getContour(0);
+			}
+			else
+			{
+				SmartDashboard.putBoolean("TargetLocked", true);
+				contour = null;
+			}
+		}
+		
+		Grip.suspendGrip(true);
+		autoTarget = false;
+		robot.robotDrive.setSafetyEnabled(true);
+
+		SmartDashboard.putBoolean("AutoTarget", autoTarget);
 	}
 	
 	// Handle LaunchPad control events.
@@ -505,16 +543,16 @@ class Teleop
 
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE_RIGHT)
 			{
-				if (launchPadEvent.control.latchedState)
-					climberArmsDown();
-				else
-    				climberArmsUp();
+//				if (launchPadEvent.control.latchedState)
+//					climberArmsDown();
+//				else
+//    				climberArmsUp();
 				
 				// Start auto targeting on button push, stop on next button push.
-//				if (!autoTarget)
-//					seekTarget();
-//				else
-//					autoTarget = false;
+				if (!autoTarget)
+					seekTargetGrip();
+				else
+					autoTarget = false;
 			}
 
 			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_RED_RIGHT)
@@ -599,11 +637,17 @@ class Teleop
 			
 			// Change which USB camera is being served by the RoboRio when using dual usb cameras.
 			
+//			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_LEFT))
+//				if (joyStickEvent.button.latchedState)
+//					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam2);
+//				else
+//					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam1);			
+
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_LEFT))
 				if (joyStickEvent.button.latchedState)
-					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam2);
+					robot.cameraThread.ChangeCamera();
 				else
-					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam1);			
+					robot.cameraThread.ChangeCamera();			
 			
 			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
 				shooter.StopShoot();

@@ -88,7 +88,7 @@ public class Vision2016
 		
 		public String toString()
 		{
-			return String.format("\n--------------------------------------------------\n" + 
+			return String.format("--------------------------------------------------\n" + 
 					"area=%.3f pctAreaToImage=%.2f\ntop=%d left=%d bottom=%d right=%d\nh=%d w=%d x=%d y=%d\narea score=%.2f  aspect score=%.2f  is target=%b  dist=%.2f", 
 					Area, PercentAreaToImageArea, BoundingRectTop, BoundingRectLeft, BoundingRectBottom, BoundingRectRight,
 					Height, Width, CenterX, CenterY, AreaScore, AspectScore, IsTarget(), Distance);
@@ -99,26 +99,33 @@ public class Vision2016
 	Image 	frame, binaryFrame;
 	int 	imaqError;
 
-	// Constants
+	// Color Constants
 //	NIVision.Range HUE_RANGE = new NIVision.Range(37, 105);		
 //	NIVision.Range SAT_RANGE = new NIVision.Range(230, 255);	
 //	NIVision.Range VAL_RANGE = new NIVision.Range(133, 183);	
 	
+	// From grip.
 //	NIVision.Range HUE_RANGE = new NIVision.Range(36, 104);		
 //	NIVision.Range SAT_RANGE = new NIVision.Range(0, 77);		
 //	NIVision.Range VAL_RANGE = new NIVision.Range(240, 255);	
-	
+
+	// This is the one that sort of works.
 	NIVision.Range HUE_RANGE = new NIVision.Range(59, 137);		
 	NIVision.Range SAT_RANGE = new NIVision.Range(64, 255);		
 	NIVision.Range VAL_RANGE = new NIVision.Range(224, 255);	
+
+	// From online color pricker.
+//	NIVision.Range HUE_RANGE = new NIVision.Range(150, 180);		
+//	NIVision.Range SAT_RANGE = new NIVision.Range(50, 70);		
+//	NIVision.Range VAL_RANGE = new NIVision.Range(90, 100);	
 
 //	NIVision.Range HUE_RANGE = new NIVision.Range(140, 228);		
 //	NIVision.Range SAT_RANGE = new NIVision.Range(0, 12);		
 //	NIVision.Range VAL_RANGE = new NIVision.Range(98, 100);	
 	
-	double AREA_MIN = 0.25; 		//Area minimum for particle as a percentage of total image area
+	double AREA_MIN = 0.10; 		//Area minimum for particle as a percentage of total image area
 	double AREA_MAX = 0.50; 		//Area maximum for particle as a percentage of total image area
-	double SCORE_MIN = 70.0;  		//Minimum score to be considered a target
+	double SCORE_MIN = 60.0;  		//Minimum score to be considered a target
 	double VIEW_ANGLE = 60; 		//View angle for camera, set to Axis m1011 by default, 64 for m1013, 51.7 for 206, 
 									//52 for HD3000 square, 60 for HD3000 640x480
 
@@ -151,7 +158,7 @@ public class Vision2016
 
 		NIVision.imaqWriteJPEGFile(frame, "/home/lvuser/SampleImages/capture.jpg", 1000, null);
 
-		// Threshold the image looking for color.
+		// Threshold the image looking for selected color.
 		NIVision.imaqColorThreshold(binaryFrame, frame, 255, NIVision.ColorMode.HSV, HUE_RANGE, SAT_RANGE, VAL_RANGE);
 		
 		NIVision.imaqWriteJPEGFile(binaryFrame, "/home/lvuser/SampleImages/threshold.jpg", 1000, null); // new NIVision.RawData());
@@ -161,10 +168,7 @@ public class Vision2016
 		
 		Util.consoleLog("Masked particles=%d", numParticles);
 
-		// filter out small particles.
-		//criteria[0].lower = (float) AREA_MIN;
-		//Util.consoleLog("criterialower=%f", criteria[0].lower);
-		
+		// filter out particles by size (area).
 		imaqError = NIVision.imaqParticleFilter4(binaryFrame, binaryFrame, criteria, filterOptions, null);
 
 		NIVision.imaqWriteJPEGFile(binaryFrame, "/home/lvuser/SampleImages/filtered.jpg", 1000, null); // new NIVision.RawData());
@@ -208,7 +212,7 @@ public class Vision2016
 			{
 				par = particles.elementAt(particleIndex);
 				
-				Util.consoleLog("<%d>%s", particleIndex, par.toString());
+				Util.consoleLog("\n<%d>%s", particleIndex, par.toString());
 				
 				if (tpar == null && par.IsTarget()) tpar = par;
 			}

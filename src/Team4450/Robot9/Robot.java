@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-05.05.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-05.23.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -61,7 +61,7 @@ public class Robot extends SampleRobot
   int                       location;
     
   Thread               	monitorBatteryThread, monitorDistanceThread, monitorCompressorThread;
-  CameraFeed			cameraThread;
+  CameraFeed2			cameraThread;
     
   //static final String  	CAMERA_IP = "10.44.50.11";
   static final int	   	USB_CAMERA = 2;
@@ -185,11 +185,12 @@ public class Robot extends SampleRobot
    		monitorCompressorThread = new MonitorCompressor();
    		monitorCompressorThread.start();
 
-   		// Start camera server using our class for dual usb cameras.
+   		// Start camera server using our class for usb cameras.
       
-   		cameraThread = new CameraFeed(this);
+   		cameraThread = new CameraFeed2(this);
    		cameraThread.start();
 
+   		// Start Grip when running it on the RoboRio.
         //Grip.suspendGrip(true);
    		//Grip.startGrip();
    		

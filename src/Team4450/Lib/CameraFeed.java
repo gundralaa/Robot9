@@ -2,7 +2,6 @@
 package Team4450.Lib;
 
 import Team4450.Robot9.Robot;
-import Team4450.Robot9.Vision2016;
 
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.Image;
@@ -12,6 +11,7 @@ import edu.wpi.first.wpilibj.Timer;
 
 /**
  * USB camera feed task. Runs as a thread separate from Robot class.
+ * Uses NI vision library.
  */
 
 public class CameraFeed extends Thread
@@ -92,8 +92,6 @@ public class CameraFeed extends Thread
 	// Run thread to read and feed camera images. Called by Thread.start().
 	public void run()
 	{
-		int frameCount = 0;
-		
 		try
 		{
 			Util.consoleLog();
@@ -102,26 +100,23 @@ public class CameraFeed extends Thread
 			{
 				if (!cameraChangeInProgress) UpdateCameraImage();
 		
-//				frameCount++;
-//				
-//				if (frameCount == frameRate)
-//				{
-//					frameCount = 0;
-//					vision.CheckTarget(frame);
-//				}
-				
 				Timer.delay(1 / frameRate);
 			}
 		}
 		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
 	}
 	
+	/**
+	 * Get last image read from camera.
+	 * @return Image Last image from camera.
+	 */
 	public Image CurrentImage()
 	{
 		Util.consoleLog();
 		
 		return frame;
 	}
+	
 	/**
 	 * Stop feed, ie close camera stream.
 	 */

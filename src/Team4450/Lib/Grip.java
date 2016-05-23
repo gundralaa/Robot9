@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj.networktables.NetworkTable;
 public final class Grip
 {
 	private static 		 Process		gripProcess = null;
-	private static final NetworkTable	gripTable = NetworkTable.getTable("GRIP");
+	private static final NetworkTable	gripTable = NetworkTable.getTable("GRIP/myContoursReport");
 	
 	// Private constructor means this class cannot be instantiated. All access is static.
 	
@@ -28,9 +28,11 @@ public final class Grip
 		public String toString()
 		{
 			String value = "";
+		
+			Util.consoleLog("area.length=%d", area.length);
 			
 			for (int i = 0; i < area.length; i++)
-				value += String.format("[%d] a=%.4f x=%.4f y=%.4f w=%.4f h=%.4f s=%.4f\n", i, area[i], centerX[i], centerY[i], width[i], height[i], solidity[i]);
+				value += String.format("[%d] a=%.0f x=%.0f y=%.0f w=%.0f h=%.0f s=%.4f\n", i, area[i], centerX[i], centerY[i], width[i], height[i], solidity[i]);
 			
 			return value;
 		}
@@ -42,17 +44,17 @@ public final class Grip
 		
 		public Contour getContour(int index)
 		{
+			Util.consoleLog("%d(%d)", index, area.length);
+			
+			if (area.length == 0 || index < 0 || index >= area.length) return null;
+			
 			Contour contour = new Contour();
 			
-			Util.consoleLog("%d", index);
-			
-			if (index < 0 || index >= area.length) return null;
-			
-			contour.area = area[index];
-			contour.centerX = centerX[index];
-			contour.centerY = centerY[index];
-			contour.width = width[index];
-			contour.height = height[index];
+			contour.area = (int) area[index];
+			contour.centerX = (int) centerX[index];
+			contour.centerY = (int) centerY[index];
+			contour.width = (int) width[index];
+			contour.height = (int) height[index];
 			contour.solidity = solidity[index];
 			
 			return contour; 
@@ -61,16 +63,16 @@ public final class Grip
 	
 	public static class Contour
 	{
-		public double	area;
-		public double	centerX;
-		public double	centerY;
-		public double	width;
-		public double	height;
+		public int		area;
+		public int		centerX;
+		public int		centerY;
+		public int		width;
+		public int		height;
 		public double	solidity;
 		
 		public String toString()
 		{
-			return String.format("a=%.4f x=%.4f y=%.4f w=%.4f h=%.4f s=%.4f\n", area, centerX, centerY, width, height, solidity);
+			return String.format("a=%d x=%d y=%d w=%d h=%d s=%.4f\n", area, centerX, centerY, width, height, solidity);
 		}
 	}
 	
