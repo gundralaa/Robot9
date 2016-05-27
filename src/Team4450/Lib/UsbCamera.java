@@ -7,7 +7,7 @@ import com.ni.vision.NIVision.ImageType;
 import edu.wpi.first.wpilibj.vision.USBCamera;
 
 /**
- * Manages USB camera. 
+ * Manages USB camera by wrapping WpiLib USB camera class. 
  */
 public class UsbCamera
 {

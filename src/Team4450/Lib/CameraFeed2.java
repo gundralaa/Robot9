@@ -2,15 +2,17 @@
 package Team4450.Lib;
 
 import Team4450.Robot9.Robot;
-
+import Team4450.Lib.CameraServer;
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.Image;
 
-import edu.wpi.first.wpilibj.CameraServer;
+//import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Timer;
 
 /**
  * USB camera feed task. Runs as a thread separate from Robot class.
+ * Manages one or more usb cameras feeding their images to the 
+ * CameraServer class to send to the DS.
  * Uses UsbCamera objects instead of NI image library.
  */
 

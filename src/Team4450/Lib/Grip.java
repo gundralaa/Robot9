@@ -104,7 +104,7 @@ public final class Grip
 	
 	public static void suspendGrip(boolean suspend)
 	{
-		Util.consoleLog("%b", !suspend);
+		Util.consoleLog("%b", suspend);
 		
 		gripTable.putBoolean("run", !suspend);
 	}

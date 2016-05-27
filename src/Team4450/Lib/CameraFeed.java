@@ -11,7 +11,9 @@ import edu.wpi.first.wpilibj.Timer;
 
 /**
  * USB camera feed task. Runs as a thread separate from Robot class.
- * Uses NI vision library.
+ * Manages one or more usb cameras feeding their images to the 
+ * CameraServer class to send to the DS.
+ * Uses NI image library to access cameras directly.
  */
 
 public class CameraFeed extends Thread
