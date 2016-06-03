@@ -355,10 +355,11 @@ public class CameraServer
           continue;
         }
 
-        // Wait for the camera
+        // Wait for the camera first image.
+        
         synchronized (this) 
         {
-          System.out.println("Camera not yet ready, awaiting image");
+        	Util.consoleLog("Camera not yet ready, awaiting first image");
           
           if (m_camera == null) wait();
           
@@ -372,12 +373,18 @@ public class CameraServer
           setSize(size);
         }
 
+        Util.consoleLog("Camera ready, streaming images");
+
         long period = (long) (1000 / (1.0 * fps));
+        
+        // Loop waiting on image then sending image.
         
         while (true) 
         {
           long t0 = System.currentTimeMillis();
           final CameraData imageData;
+          
+          // Wait for image.
           
           synchronized (this) 
           {
@@ -395,7 +402,8 @@ public class CameraServer
           byte[] imageArray = new byte[imageData.data.getBuffer().remaining()];
           imageData.data.getBuffer().get(imageArray, 0, imageData.data.getBuffer().remaining());
 
-          // write numbers
+          // Write image to socket.
+        
           try 
           {
             os.write(kMagicNumber);
@@ -424,13 +432,13 @@ public class CameraServer
               }
             }
           }
-        } // while reading/writing data.
+        } // while reading/writing data, loop back for next image.
       } 
       catch (IOException ex) 
       {
       	ex.printStackTrace(Util.logPrintStream);
-        continue;
+        continue;	// Eject from outer while loop.
       }
-    } // while
+    } // while accept connection.
   }
 }

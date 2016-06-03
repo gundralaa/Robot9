@@ -50,12 +50,16 @@ public final class Grip
 			
 			Contour contour = new Contour();
 			
+			try
+			{
 			contour.area = (int) area[index];
 			contour.centerX = (int) centerX[index];
 			contour.centerY = (int) centerY[index];
 			contour.width = (int) width[index];
 			contour.height = (int) height[index];
 			contour.solidity = solidity[index];
+			}
+			catch (Throwable e) {return null;};
 			
 			return contour; 
 		}
@@ -109,6 +113,15 @@ public final class Grip
 		gripTable.putBoolean("run", !suspend);
 	}
  
+	/**
+	 * Gets current contours report from the data Grip posts to the network tables. 
+	 * Note that this data is about .75 seconds old, that is represents what the 
+	 * camera saw .75 seconds ago, not what the camera sees at the time this method
+	 * is called.
+	 * @return A ContoursReport object containing the list of contours (objects)
+	 * found in the camera image. Grip should only return contours matching the target
+	 * criteria.
+	 */
 	public static ContoursReport getContoursReport()
 	{
 		ContoursReport report = new ContoursReport();

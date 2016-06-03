@@ -453,12 +453,13 @@ class Teleop
 		
 		autoTarget = true;
 
-		Grip.suspendGrip(false);
+		//Grip.suspendGrip(false);	// Only needed when Grip on RoboRio.
 		
 		SmartDashboard.putBoolean("TargetLocked", false);
 		SmartDashboard.putBoolean("AutoTarget", autoTarget);
 
 		contour = Grip.getContoursReport().getContour(0);
+		
 		robot.robotDrive.setSafetyEnabled(false);
 		
 		while (robot.isEnabled() && autoTarget && contour != null)
@@ -471,7 +472,11 @@ class Teleop
 
 				saveX = (int) contour.centerX;
 				
-				Timer.delay(.075);	// Grip running on Sean's Surface.
+				// Wait for Grip to process an image after bump movement stops.
+				// Grip takes about .75sec to process an image and return data.
+				
+				//Timer.delay(.10);	// Grip running on Sean's Surface.
+				Timer.delay(.75);	// Grip running on Raspberry Pi.
 				
 				contour = Grip.getContoursReport().getContour(0);
 			}
@@ -482,10 +487,9 @@ class Teleop
 			}
 		}
 		
-		Grip.suspendGrip(true);
+		//Grip.suspendGrip(true);	// Only needed when Grip on the RoboRio.
 		autoTarget = false;
 		robot.robotDrive.setSafetyEnabled(true);
-
 		SmartDashboard.putBoolean("AutoTarget", autoTarget);
 	}
 	
