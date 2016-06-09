@@ -39,7 +39,6 @@ public class CameraServer
   private static final int kSize320x240 = 1;
   private static final int kSize160x120 = 2;
   private static final int 		kHardwareCompression = -1;
-  private static final String 	kDefaultCameraName = "cam1";
   private static final int 		kMaxImageSize = 200000;
   private static CameraServer	server;
 
@@ -50,17 +49,17 @@ public class CameraServer
     return server;
   }
 
-  private int 		m_quality;
-  private boolean 	m_autoCaptureStarted;
-  private boolean 	m_hwClient = true;
-  private USBCamera m_camera;
+  private int 		 m_quality;
+  private boolean 	 m_autoCaptureStarted;
+  private boolean 	 m_hwClient = true;
+  private USBCamera  m_camera;
   private CameraData m_imageData;
   private Deque<ByteBuffer> m_imageDataPool;
 
   private final class CameraData 
   {
-    private final RawData data;
-    private final int start;
+    private final RawData 	data;
+    private final int		start;
 
     CameraData(RawData data, int start) 
     {

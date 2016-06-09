@@ -218,7 +218,7 @@ public class Shooter
 
 		shooterMotorControl.set(0);
 		
-		if (teleop != null) teleop.rightStick.FindButton(JoyStickButtonIDs.TOP_LEFT).latchedState = false;
+		if (teleop != null) teleop.utilityStick.FindButton(JoyStickButtonIDs.TOP_LEFT).latchedState = false;
 		SmartDashboard.putBoolean("ShooterMotor", false);
 	}
 	//----------------------------------------

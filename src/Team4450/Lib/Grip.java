@@ -1,7 +1,5 @@
 package Team4450.Lib;
 
-import java.io.File;
-
 import edu.wpi.first.wpilibj.networktables.NetworkTable;
 
 public final class Grip

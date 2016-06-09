@@ -8,7 +8,6 @@ import Team4450.Lib.JoyStick.*;
 import Team4450.Lib.LaunchPad.*;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.Talon;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -24,7 +23,7 @@ class Teleop
 	private final FestoDA		tiltValve = new FestoDA(1, 0);
 	private final FestoDA		climberArmsValve = new FestoDA(1, 2);
 	private final FestoDA		defenseArmsValve = new FestoDA(1, 4);
-	private boolean				ptoMode = false, invertDrive = false, limitSwitchEnabled = false;
+	private boolean				ptoMode = false, limitSwitchEnabled = false;
 	private boolean				autoTarget = false, climbPrepEnabled = false, climbPrepInProgress = false;
 	private double				shooterPower = Shooter.SHOOTER_HIGH_POWER;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
@@ -33,7 +32,7 @@ class Teleop
 	private final Shooter		shooter;
 	private final DigitalInput	climbUpSwitch = new DigitalInput(3);
 
-	private Vision2016					vision = new Vision2016();
+	private Vision2016			vision = new Vision2016();
 
 	// Encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
 	private Encoder				encoder = new Encoder(1, 2, true, EncodingType.k4X);
@@ -392,7 +391,12 @@ class Teleop
 		else
 			robot.robotDrive.tankDrive(-.60, .60);	// - turn left.
 			
-		Timer.delay(.10);
+		// larger bump the further off target we are.
+		
+		if (Math.abs(value) < 100)
+			Timer.delay(.1);
+		else
+			Timer.delay(.25);
 		
 		robot.robotDrive.tankDrive(0, 0);
 	}
@@ -600,22 +604,23 @@ class Teleop
 //					robot.cameraThread.ChangeCamera(robot.cameraThread.cam2);
 //				else
 //					robot.cameraThread.ChangeCamera(robot.cameraThread.cam1);
+				
 				if (launchPadEvent.control.latchedState)
 					SmartDashboard.putBoolean("PIDEnabled", true);
 				else
 					SmartDashboard.putBoolean("PIDEnabled", false);
 			
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_LEFT_BACK))
-				if (launchPadEvent.control.latchedState)
-				climbPrepEnabled = true;
-			else
-				climbPrepEnabled = false;
-			
 //				if (launchPadEvent.control.latchedState)
-//					robot.SetCANTalonNeutral(false);	// coast
+//					climbPrepEnabled = true;
 //				else
-//					robot.SetCANTalonNeutral(true);		// brake
+//					climbPrepEnabled = false;
 			
+				if (launchPadEvent.control.latchedState)
+					robot.SetCANTalonNeutral(false);	// coast
+				else
+	    			robot.SetCANTalonNeutral(true);		// brake
+	
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_RIGHT))
 				if (launchPadEvent.control.latchedState)
 				{

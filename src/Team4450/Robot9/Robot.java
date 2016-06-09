@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-06.02.16-02";
+  static final String  	PROGRAM_NAME = "RAC9-06.09.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -189,9 +189,9 @@ public class Robot extends SampleRobot
 
    		// Start camera server using our class for usb cameras.
    		// Not used at this time as we are feeding the DS from the Raspberry Pi by
-   		// setting the DS camera IP address to .11 which is the Pi. In this case the
-   		// usb camera is plugged into the Pi and the Pi is running Grip and feeding
-   		// images to Grip and seprately providing an MJpeg image stream to the DS.
+   		// setting the DS camera IP address to .11 which is assigned to the Pi. In 
+   		// this case the usb camera is plugged into the Pi and the Pi is running Grip
+   		// feeding images to Grip and Grip provides an MJpeg image stream to the DS.
       
    		//cameraThread = new CameraFeed2(this);
    		//cameraThread.start();

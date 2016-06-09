@@ -13,9 +13,6 @@ import com.ni.vision.NIVision.DrawMode;
 import com.ni.vision.NIVision.ShapeMode;
 import com.ni.vision.NIVision.ImageType;
 
-import edu.wpi.first.wpilibj.image.ColorImage;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 /**
  * Example of finding target with green light shined on retroreflective tape.
  * This example utilizes an image file, which you need to copy to the roboRIO
