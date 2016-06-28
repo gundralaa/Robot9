@@ -42,6 +42,9 @@ public class Autonomous
         // Set gyro to heading 0.
         robot.gyro.reset();
 
+        // Wait to start motors so gyro will be zero before first movement.
+        Timer.delay(.50);
+
 		switch (program)
 		{
 			case 0:		// No auto program.
@@ -110,27 +113,44 @@ public class Autonomous
 				break;
 				
 			case 5:		// Drive forward to test gyro then stop.
-				double left = -.60, right = -.60, gain = 1.0;
-				
-				while (robot.isAutonomous() && Math.abs(encoder.get()) < 3000) 
-				{
-					LCD.printLine(3, "encoder=%d", encoder.get());
-					LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
-
-					left = left + (robot.gyro.getAngle() * gain);
-					right = right - (robot.gyro.getAngle() * gain);
-
-					robot.robotDrive.tankDrive(left, right);
-					Timer.delay(.020);
-				}
-
-				robot.robotDrive.tankDrive(0, 0, true);				
+				autoDrive(-.40, 3000, true);
 				break;
 		}
 		
 		Util.consoleLog("end");
 	}
 
+	// Auto drive in set direction and power for specified encoder count. Stops
+	// with our without brakes on CAN bus drive system. Uses gyro to go straight.
+	
+	private void autoDrive(double power, int encoderCounts, boolean enableBrakes)
+	{
+		int		angle;
+		double	gain = .03;
+		
+		Util.consoleLog("pwr=%f, count=%d, coast=%b", power, encoderCounts, enableBrakes);
+
+		if (robot.isComp) robot.SetCANTalonBrakeMode(enableBrakes);
+		
+		while (robot.isAutonomous() && Math.abs(encoder.get()) < encoderCounts) 
+		{
+			LCD.printLine(3, "encoder=%d", encoder.get());
+			LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
+			
+			// Angle is negative if robot veering left, positive if veering right. We increase power
+			
+			angle = (int) robot.gyro.getAngle();
+			
+			//Util.consoleLog("angle=%d", angle);
+			
+			robot.robotDrive.drive(power, -angle * gain);
+			
+			Timer.delay(.020);
+		}
+
+		robot.robotDrive.tankDrive(0, 0, true);				
+	}
+	
 	public void executeWithCamera()
 	{
 		Util.consoleLog();

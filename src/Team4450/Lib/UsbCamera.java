@@ -69,6 +69,7 @@ public class UsbCamera
 		if (isRunning()) return;
 
 		cam = new USBCamera(name);
+		
 		cam.openCamera();
 		
 		updateSettings();
@@ -85,8 +86,7 @@ public class UsbCamera
 	
 	public Image getImage() 
 	{
-		startCapture();
-		
+		startCapture();		
 		
 		cam.getImage(image);
 		

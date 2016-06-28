@@ -98,10 +98,13 @@ class Teleop
 		// Configure LaunchPad and Joystick event handlers.
 		
 		launchPad = new LaunchPad(robot.launchPad, LaunchPadControlIDs.BUTTON_BLACK, this);
+		
 		LaunchPadControl lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_LEFT_FRONT);
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
-		lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_LEFT_BACK);
-		lpControl.controlType = LaunchPadControlTypes.SWITCH;
+		
+		LaunchPadControl lpRLBControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_LEFT_BACK);
+		lpRLBControl.controlType = LaunchPadControlTypes.SWITCH;
+
 		lpControl = launchPad.AddControl(LaunchPadControlIDs.ROCKER_RIGHT);
 		lpControl.controlType = LaunchPadControlTypes.SWITCH;
 		launchPad.AddControl(LaunchPadControlIDs.BUTTON_YELLOW);
@@ -131,10 +134,15 @@ class Teleop
 		utilityStick.AddButton(JoyStickButtonIDs.TRIGGER);
         utilityStick.addJoyStickEventListener(new UtilityStickListener());
         utilityStick.Start();
+
+		// Set CAN Talon brake mode by rocker switch setting.
+        // We do this here so that the Utility stick thread has time to read the initial state
+        // of the rocker switch.
+        if (robot.isComp) robot.SetCANTalonBrakeMode(lpRLBControl.latchedState);
         
         // Set gyro to heading 0.
         robot.gyro.reset();
-        
+
         // Motor safety turned on.
         robot.robotDrive.setSafetyEnabled(true);
         
@@ -216,7 +224,7 @@ class Teleop
 		return Math.log(value) / Math.log(base);
 	}
 
-	// Map joystick y value of 0.0-1.0 to the motor working power range of approx 0.5-1.0 using
+	// Map joystick y value of 0.0 to 1.0 to the motor working power range of approx 0.5 to 1.0 using
 	// logrithmic curve.
 	
 	private double stickLogCorrection(double joystickValue)
@@ -617,9 +625,9 @@ class Teleop
 //					climbPrepEnabled = false;
 			
 				if (launchPadEvent.control.latchedState)
-					robot.SetCANTalonNeutral(false);	// coast
+					robot.SetCANTalonBrakeMode(false);	// coast
 				else
-	    			robot.SetCANTalonNeutral(true);		// brake
+	    			robot.SetCANTalonBrakeMode(true);	// brake
 	
 			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_RIGHT))
 				if (launchPadEvent.control.latchedState)

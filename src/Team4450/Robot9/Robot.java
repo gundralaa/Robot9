@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-06.09.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-06.28.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -126,6 +126,8 @@ public class Robot extends SampleRobot
    		//SmartDashboard.putBoolean("CompressorEnabled", false);
    		SmartDashboard.putBoolean("CompressorEnabled", Boolean.parseBoolean(robotProperties.getProperty("CompressorEnabledByDefault")));
 
+   		// Initialize PID data entry fields on the DS to thier default values.
+   		
    		SmartDashboard.putBoolean("PIDEnabled", true);
    		SmartDashboard.putNumber("PValue", Shooter.PVALUE);
    		SmartDashboard.putNumber("IValue", Shooter.IVALUE);
@@ -162,8 +164,9 @@ public class Robot extends SampleRobot
      
         // calibrate the gyro.
         
-        //gyro.initGyro();
-        //gyro.calibrate();
+        gyro.initGyro();
+        gyro.setSensitivity(.007);	// Analog Devices model ADSR-S652.
+        gyro.calibrate();
         
    		// Set starting camera feed mode on driver station to USB-HW
         // and IP address of system hosting the camera.
@@ -362,7 +365,7 @@ public class Robot extends SampleRobot
       RSlaveCanTalon.set(RFCanTalon.getDeviceID());
       
       // Turn on brake mode for CAN Talons.
-      SetCANTalonNeutral(true);
+      SetCANTalonBrakeMode(true);
   }
 
   private void InitializePWMTalonDrive()
@@ -393,7 +396,7 @@ public class Robot extends SampleRobot
   
   // Set neutral behavior of CAN Talons. True = brake mode, false = coast mode.
 
-  public void SetCANTalonNeutral(boolean brakeMode)
+  public void SetCANTalonBrakeMode(boolean brakeMode)
   {
 	  Util.consoleLog("brakes on=%b", brakeMode);
 	  
