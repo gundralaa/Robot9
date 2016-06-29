@@ -137,7 +137,7 @@ public class Autonomous
 			LCD.printLine(3, "encoder=%d", encoder.get());
 			LCD.printLine(5, "gyroAngle=%d, gyroRate=%d", (int) robot.gyro.getAngle(), (int) robot.gyro.getRate());
 			
-			// Angle is negative if robot veering left, positive if veering right. We increase power
+			// Angle is negative if robot veering left, positive if veering right.
 			
 			angle = (int) robot.gyro.getAngle();
 			
