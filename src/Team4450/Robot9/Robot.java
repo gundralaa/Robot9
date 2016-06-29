@@ -1,6 +1,6 @@
 // 2016 competition robot code.
 // Cleaned up and reorganized in preparation for 2016.
-// For Robot "tba" built for FRC game "First Stronghold".
+// For Robot "USS Kelvin" built for FRC game "First Stronghold".
 
 package Team4450.Robot9;
 
@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import Team4450.Lib.*;
+import edu.wpi.first.wpilibj.AnalogGyro;
 import edu.wpi.first.wpilibj.Compressor;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
@@ -29,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-02.11.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-06.28.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -41,34 +42,50 @@ public class Robot extends SampleRobot
   final Joystick        rightStick = new Joystick(1);	// 2
   final Joystick		launchPad = new Joystick(3);
   
-  final Compressor		compressor = new Compressor(0);
-
+  final Compressor		compressor = new Compressor(0);	// Compressor class represents the PCM.
+  final Compressor		compressor1 = new Compressor(1);
+  final AnalogGyro		gyro = new AnalogGyro(0);		// gyro must be plugged into analog port 0 or 1.
+  
   public Properties		robotProperties;
-	
+  
+  public boolean		isClone = false, isComp = false;
+  
+  PowerDistributionPanel PDP = new PowerDistributionPanel();
+  
   //AxisCamera			camera = null;
   CameraServer			usbCameraServer = null;
 
   DriverStation         ds = null;
-    
+    	
   DriverStation.Alliance	alliance;
   int                       location;
     
   Thread               	monitorBatteryThread, monitorDistanceThread, monitorCompressorThread;
-  public CameraFeed		cameraThread;
+  CameraFeed2			cameraThread;
     
   static final String  	CAMERA_IP = "10.44.50.11";
   static final int	   	USB_CAMERA = 2;
   static final int     	IP_CAMERA = 3;
  
+  // PWM port assignments:
+  // 0 - shooter motor
+  // 1 - shooter motor
+  // 2 - defense arm motor
+  // 3 - wheel motor lf
+  // 4 - wheel motor lr
+  // 5 - wheel motor rf
+  // 6 - wheel motor rr
+  // 7 - pickup motor
+  
   public Robot() throws IOException
   {	
 	// Set up our custom logger.
-	  
+	 
 	try
 	{
 		Util.CustomLogger.setup();
     }
-    catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+    catch (Throwable e) {Util.logException(e);}
       
     try
     {
@@ -97,15 +114,32 @@ public class Robot extends SampleRobot
       
    		robotProperties = Util.readProperties();
       
+   		// Is this the competition or clone robot?
+   		
+		if (robotProperties.getProperty("RobotId").equals("comp"))
+			isComp = true;
+		else
+			isClone = true;
+
    		SmartDashboard.putString("Program", PROGRAM_NAME);
    		
    		//SmartDashboard.putBoolean("CompressorEnabled", false);
    		SmartDashboard.putBoolean("CompressorEnabled", Boolean.parseBoolean(robotProperties.getProperty("CompressorEnabledByDefault")));
 
-   		// Reset PDB sticky faults.
+   		// Initialize PID data entry fields on the DS to thier default values.
+   		
+   		SmartDashboard.putBoolean("PIDEnabled", true);
+   		SmartDashboard.putNumber("PValue", Shooter.PVALUE);
+   		SmartDashboard.putNumber("IValue", Shooter.IVALUE);
+   		SmartDashboard.putNumber("DValue", Shooter.DVALUE);
+   		SmartDashboard.putNumber("LowSetting", Shooter.SHOOTER_LOW_RPM);
+   		SmartDashboard.putNumber("HighSetting", Shooter.SHOOTER_HIGH_RPM);
+   		
+   		// Reset PDB & PCM sticky faults.
       
-   		PowerDistributionPanel PDP = new PowerDistributionPanel();
    		PDP.clearStickyFaults();
+   		compressor.clearAllPCMStickyFaults();
+   		compressor1.clearAllPCMStickyFaults();
 
    		// Configure motor controllers and RobotDrive.
         // Competition robot uses CAN Talons clone uses PWM Talons.
@@ -116,20 +150,29 @@ public class Robot extends SampleRobot
 			InitializePWMTalonDrive();
 		
         robotDrive.stopMotor();
-    
+        robotDrive.setSafetyEnabled(false);
         robotDrive.setExpiration(0.1);
         
         // Reverse motors so they all turn on the right direction to match "forward"
         // as we define it for the robot.
+
         robotDrive.setInvertedMotor(RobotDrive.MotorType.kFrontLeft, true);
         robotDrive.setInvertedMotor(RobotDrive.MotorType.kRearLeft, true);
     
         robotDrive.setInvertedMotor(RobotDrive.MotorType.kFrontRight, true);
         robotDrive.setInvertedMotor(RobotDrive.MotorType.kRearRight, true);
      
-   		// Set starting camera feed on driver station to USB-HW.
+        // calibrate the gyro.
+        
+        gyro.initGyro();
+        gyro.setSensitivity(.007);	// Analog Devices model ADSR-S652.
+        gyro.calibrate();
+        
+   		// Set starting camera feed mode on driver station to USB-HW
+        // and IP address of system hosting the camera.
       
    		SmartDashboard.putNumber("CameraSelect", USB_CAMERA);
+   		SmartDashboard.putString("RobotCameraIP", CAMERA_IP);
 
    		// Start usb camera feed server on roboRIO. usb camera name is set by roboRIO.
    		// If camera feed stops working, check roboRIO name assignment.
@@ -147,11 +190,19 @@ public class Robot extends SampleRobot
    		monitorCompressorThread = new MonitorCompressor();
    		monitorCompressorThread.start();
 
-   		// Start camera server using our class for dual usb cameras.
+   		// Start camera server using our class for usb cameras.
+   		// Not used at this time as we are feeding the DS from the Raspberry Pi by
+   		// setting the DS camera IP address to .11 which is assigned to the Pi. In 
+   		// this case the usb camera is plugged into the Pi and the Pi is running Grip
+   		// feeding images to Grip and Grip provides an MJpeg image stream to the DS.
       
-   		cameraThread = new CameraFeed(this);
-   		cameraThread.start();
-     
+   		//cameraThread = new CameraFeed2(this);
+   		//cameraThread.start();
+
+   		// Start Grip and suspend it when running it on the RoboRio.
+        //Grip.suspendGrip(true)
+   		//Grip.startGrip();
+   		
    		// Start thread to monitor distance sensor.
    		
    		//monitorDistanceThread = new MonitorDistanceMBX(this);
@@ -177,7 +228,15 @@ public class Robot extends SampleRobot
 		  SmartDashboard.putBoolean("Teleop Mode", false);
 		  SmartDashboard.putBoolean("PTO", false);
 		  SmartDashboard.putBoolean("FMS", ds.isFMSAttached());
+		  SmartDashboard.putBoolean("ShooterMotor", false);
+		  SmartDashboard.putBoolean("PickupMotor", false);
+		  SmartDashboard.putBoolean("LSOverride", false);
+		  SmartDashboard.putBoolean("ShooterLowPower", false);
+		  SmartDashboard.putBoolean("AutoTarget", false);
+		  SmartDashboard.putBoolean("TargetLocked", false);
 
+		  //Grip.suspendGrip(true);
+		  
 		  Util.consoleLog("end");
 	  }
 	  catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
@@ -203,6 +262,10 @@ public class Robot extends SampleRobot
 
     	  // This code turns off the automatic compressor management if requested by DS.
     	  compressor.setClosedLoopControl(SmartDashboard.getBoolean("CompressorEnabled", true));
+
+    	  PDP.clearStickyFaults();
+    	  compressor.clearAllPCMStickyFaults();
+    	  compressor1.clearAllPCMStickyFaults();
              
     	  // Start autonomous process contained in the MyAutonomous class.
         
@@ -234,14 +297,20 @@ public class Robot extends SampleRobot
       	  location = ds.getLocation();
         
           Util.consoleLog("Alliance=%s, Location=%d, FMS=%b", alliance.name(), location, ds.isFMSAttached());
-        
+
+          PDP.clearStickyFaults();
+          compressor.clearAllPCMStickyFaults();
+       	  compressor1.clearAllPCMStickyFaults();
+
           // This code turns off the automatic compressor management if requested by DS.
           compressor.setClosedLoopControl(SmartDashboard.getBoolean("CompressorEnabled", true));
+          
+          //Grip.suspendGrip(false);
         
           // Start operator control process contained in the MyTeleop class.
         
           Teleop teleOp = new Teleop(this);
-        
+       
           teleOp.OperatorControl();
         
           teleOp.dispose();
@@ -294,29 +363,75 @@ public class Robot extends SampleRobot
 
       RSlaveCanTalon.changeControlMode(TalonControlMode.Follower);
       RSlaveCanTalon.set(RFCanTalon.getDeviceID());
-}
+      
+      // Turn on brake mode for CAN Talons.
+      SetCANTalonBrakeMode(true);
+  }
 
   private void InitializePWMTalonDrive()
   {
 	  Util.consoleLog();
 
-	  LFPwmTalon = new Talon(1);
-	  LRPwmTalon = new Talon(2);
-	  RFPwmTalon = new Talon(3);
-	  RRPwmTalon = new Talon(4);
-	  
+	  LFPwmTalon = new Talon(3);
+	  LRPwmTalon = new Talon(4);
+	  RFPwmTalon = new Talon(5);
+	  RRPwmTalon = new Talon(6);
+	 
 	  robotDrive = new RobotDrive(LFPwmTalon, LRPwmTalon, RFPwmTalon, RRPwmTalon);
+	  
+	  Util.consoleLog("end");
   }
   
   // Initialize and Log status indication from CANTalon. If we see an exception
   // or a talon has low voltage value, it did not get recognized by the RR on start up.
   
-  private void InitializeCANTalon(CANTalon talon)
+  public void InitializeCANTalon(CANTalon talon)
   {
 	  Util.consoleLog("talon init: %s   voltage=%.1f", talon.getDescription(), talon.getBusVoltage());
 
 	  talon.clearStickyFaults();
 	  talon.enableControl();
 	  talon.changeControlMode(TalonControlMode.PercentVbus);
+  }
+  
+  // Set neutral behavior of CAN Talons. True = brake mode, false = coast mode.
+
+  public void SetCANTalonBrakeMode(boolean brakeMode)
+  {
+	  Util.consoleLog("brakes on=%b", brakeMode);
+	  
+	  LFCanTalon.enableBrakeMode(brakeMode);
+	  LRCanTalon.enableBrakeMode(brakeMode);
+	  RFCanTalon.enableBrakeMode(brakeMode);
+	  RRCanTalon.enableBrakeMode(brakeMode);
+	  LSlaveCanTalon.enableBrakeMode(brakeMode);
+	  RSlaveCanTalon.enableBrakeMode(brakeMode);
+  }
+  
+  // Set CAN Talon voltage ramp rate. Rate is volts/sec and can be 2-12v.
+  
+  public void SetCANTalonRampRate(double rate)
+  {
+	  Util.consoleLog("%f", rate);
+	  
+	  LFCanTalon.setVoltageRampRate(rate);
+	  LRCanTalon.setVoltageRampRate(rate);
+	  RFCanTalon.setVoltageRampRate(rate);
+	  RRCanTalon.setVoltageRampRate(rate);
+	  LSlaveCanTalon.setVoltageRampRate(rate);
+	  RSlaveCanTalon.setVoltageRampRate(rate);
+  }
+  
+  // Return voltage and current draw for each CAN Talon.
+  
+  public String GetCANTalonStatus()
+  {
+	  return String.format("%.1f/%.1f  %.1f/%.1f  %.1f/%.1f  %.1f/%.1f  %.1f/%.1f  %.1f/%.1f", 
+			  LFCanTalon.getOutputVoltage(), LFCanTalon.getOutputCurrent(),
+			  LRCanTalon.getOutputVoltage(), LRCanTalon.getOutputCurrent(),
+			  RFCanTalon.getOutputVoltage(), RFCanTalon.getOutputCurrent(),
+			  RRCanTalon.getOutputVoltage(), RRCanTalon.getOutputCurrent(),
+			  LSlaveCanTalon.getOutputVoltage(), LSlaveCanTalon.getOutputCurrent(),
+			  RSlaveCanTalon.getOutputVoltage(), RSlaveCanTalon.getOutputCurrent());
   }
 }

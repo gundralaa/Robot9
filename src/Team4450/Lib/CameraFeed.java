@@ -11,6 +11,9 @@ import edu.wpi.first.wpilibj.Timer;
 
 /**
  * USB camera feed task. Runs as a thread separate from Robot class.
+ * Manages one or more usb cameras feeding their images to the 
+ * CameraServer class to send to the DS.
+ * Uses NI image library to access cameras directly.
  */
 
 public class CameraFeed extends Thread
@@ -43,7 +46,7 @@ public class CameraFeed extends Thread
     		
     		// Camera initialization based on robotid from properties file.
     		
-    		if (robot.robotProperties.getProperty("RobotId").equals("comp"))
+    		if (robot.isComp)
     		{
         		try
         		{
@@ -58,7 +61,7 @@ public class CameraFeed extends Thread
         		catch (Exception e) {}
     		}
     		
-    		if (robot.robotProperties.getProperty("RobotId").equalsIgnoreCase("clone"))
+    		if (robot.isClone)
     		{
     			Util.consoleLog("in clone");
     			
@@ -98,11 +101,22 @@ public class CameraFeed extends Thread
 			while (true)
 			{
 				if (!cameraChangeInProgress) UpdateCameraImage();
-				
+		
 				Timer.delay(1 / frameRate);
 			}
 		}
 		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+	}
+	
+	/**
+	 * Get last image read from camera.
+	 * @return Image Last image from camera.
+	 */
+	public Image CurrentImage()
+	{
+		Util.consoleLog();
+		
+		return frame;
 	}
 	
 	/**
