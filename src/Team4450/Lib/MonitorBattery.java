@@ -68,6 +68,6 @@ public class MonitorBattery extends Thread
 				}
 			}
 		}
-		catch (Throwable e)	{e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e)	{Util.logException(e);}
 	}
 }

@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-06.28.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-07.28.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -98,7 +98,7 @@ public class Robot extends SampleRobot
       	
         Util.consoleLog("%s %s", PROGRAM_NAME, "end");
     }
-    catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+    catch (Throwable e) {Util.logException(e);}
   }
     
   public void robotInit()
@@ -210,7 +210,7 @@ public class Robot extends SampleRobot
    		
    		Util.consoleLog("end");
     }
-    catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+    catch (Throwable e) {Util.logException(e);}
   }
     
   public void disabled()
@@ -239,7 +239,7 @@ public class Robot extends SampleRobot
 		  
 		  Util.consoleLog("end");
 	  }
-	  catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+	  catch (Throwable e) {Util.logException(e);}
   }
     
   public void autonomous() 
@@ -278,7 +278,7 @@ public class Robot extends SampleRobot
     	  SmartDashboard.putBoolean("Auto Mode", false);
     	  Util.consoleLog("end");
       }
-      catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+      catch (Throwable e) {Util.logException(e);}
   }
 
   public void operatorControl() 
@@ -317,7 +317,7 @@ public class Robot extends SampleRobot
         	
           Util.consoleLog("end");
        }
-       catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+       catch (Throwable e) {Util.logException(e);} 
   }
     
   public void test() 

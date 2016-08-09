@@ -88,7 +88,7 @@ public class CameraFeed extends Thread
             
             ChangeCamera(currentCamera);
 		}
-		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e) {Util.logException(e);}
 	}
 	
 	// Run thread to read and feed camera images. Called by Thread.start().
@@ -105,7 +105,7 @@ public class CameraFeed extends Thread
 				Timer.delay(1 / frameRate);
 			}
 		}
-		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e) {Util.logException(e);}
 	}
 	
 	/**
@@ -130,7 +130,7 @@ public class CameraFeed extends Thread
     
     		if (currentCamera != -1) NIVision.IMAQdxStopAcquisition(currentCamera);
 		}
-		catch (Throwable e)	{e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e)	{Util.logException(e);}
 	}
 	
 	/**
@@ -157,7 +157,7 @@ public class CameraFeed extends Thread
         	
         	cameraChangeInProgress = false;
 		}
-		catch (Throwable e)	{e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e)	{Util.logException(e);}
     }
     
 	 // Get an image from current camera and give it to the server.
@@ -172,6 +172,6 @@ public class CameraFeed extends Thread
             	server.setImage(frame);
     		}
 		}
-		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e) {Util.logException(e);}
     }
 }

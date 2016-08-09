@@ -3,8 +3,13 @@ package Team4450.Lib;
 
 import Team4450.Robot9.Robot;
 import Team4450.Lib.CameraServer;
+
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.Image;
+
+
+
+
 
 //import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Timer;
@@ -72,7 +77,7 @@ public class CameraFeed2 extends Thread
 
             currentCamera = cam1;
 		}
-		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e) {Util.logException(e);}
 	}
 	
 	// Run thread to read and feed camera images. Called by Thread.start().
@@ -91,7 +96,7 @@ public class CameraFeed2 extends Thread
 				Timer.delay(1 / frameRate);
 			}
 		}
-		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e) {Util.logException(e);}
 	}
 	
 	/**
@@ -118,7 +123,7 @@ public class CameraFeed2 extends Thread
     		
     		currentCamera = cam1 = null;
 		}
-		catch (Throwable e)	{e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e)	{Util.logException(e);}
 	}
 	
 	/**
@@ -146,6 +151,6 @@ public class CameraFeed2 extends Thread
             	server.setImage(frame);
     		}
 		}
-		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e) {Util.logException(e);}
     }
 }

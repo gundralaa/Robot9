@@ -88,7 +88,7 @@ public class CameraServer
         {
           serve();
         } 
-        catch (IOException ex) {ex.printStackTrace(Util.logPrintStream);}
+        catch (IOException ex) {Util.logException(ex);}
         catch (InterruptedException ex) {Thread.currentThread().interrupt();}
       }
     });
@@ -189,7 +189,7 @@ public class CameraServer
       camera.openCamera();
       startAutomaticCapture(camera);
     }
-    catch (VisionException ex) {ex.printStackTrace(Util.logPrintStream);}
+    catch (VisionException ex) {Util.logException(ex);}
   }
 
   public synchronized void startAutomaticCapture(USBCamera camera) 
@@ -435,7 +435,7 @@ public class CameraServer
       } 
       catch (IOException ex) 
       {
-      	ex.printStackTrace(Util.logPrintStream);
+    	Util.logException(ex);
         continue;	// Eject from outer while loop.
       }
     } // while accept connection.

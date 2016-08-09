@@ -6,6 +6,7 @@ import java.lang.Math;
 import Team4450.Lib.*;
 import Team4450.Lib.JoyStick.*;
 import Team4450.Lib.LaunchPad.*;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
@@ -28,7 +29,8 @@ class Teleop
 	private double				shooterPower = Shooter.SHOOTER_HIGH_POWER;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
 	//private final RevDigitBoard	revBoard = RevDigitBoard.getInstance();
-	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
+	//private final DigitalInput	hallEffectSensorDigital = new DigitalInput(9);
+	//private final AnalogInput	hallEffectSensorAnalog = new AnalogInput(3);
 	private final Shooter		shooter;
 	private final DigitalInput	climbUpSwitch = new DigitalInput(3);
 
@@ -182,7 +184,8 @@ class Teleop
 							shooter.shooterSpeedSource.getRate() * 60, shooter.shooterMotorControl.get(),
 							shooter.shooterMotorControl.get());
 			//LCD.printLine(7, "shooterspeedsource=%.0f", shooter.shooterSpeedSource.pidGet());
-
+			//LCD.printLine(7, "hall effect=%b", hallEffectSensorDigital.get());
+			//LCD.printLine(7, "hall effect=%f", hallEffectSensorAnalog.getVoltage());
 			// This corrects stick alignment error when trying to drive straight. 
 			//if (Math.abs(rightY - leftY) < 0.2) rightY = leftY;
 			

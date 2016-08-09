@@ -47,6 +47,6 @@ public class MonitorCompressor extends Thread
 			Timer.delay(2.0);
 		}
 	}
-	catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+	catch (Throwable e) {Util.logException(e);}
   }
 }

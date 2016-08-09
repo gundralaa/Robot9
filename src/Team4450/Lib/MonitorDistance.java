@@ -61,6 +61,6 @@ class MonitorDistance extends Thread
 				Timer.delay(1.0);
 			}
 		}
-		catch (Throwable e) {e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e) {Util.logException(e);}
 	}
 }
