@@ -32,14 +32,14 @@ public class Shooter
 	public Encoder					encoder = new Encoder(4, 5, true, EncodingType.k4X);
 
 	// Competition robot defaults.
-	//public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = .60;
-	//public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 7800;
-	//public static double			PVALUE = .0025, IVALUE = 0.0025, DVALUE = .003; 
+	public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = .60;
+	public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 9000;	//7800;
+	public static double			PVALUE = .0025, IVALUE = 0.0025, DVALUE = .003; 
 
 	// Clone robot defaults.
-	public static double			SHOOTER_LOW_POWER = .45, SHOOTER_HIGH_POWER = 1.0;
-	public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 9500;
-	public static double			PVALUE = .002, IVALUE = .002, DVALUE = .005; 
+	//public static double			SHOOTER_LOW_POWER = .45, SHOOTER_HIGH_POWER = 1.0;
+	//public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 9000;
+	//public static double			PVALUE = .002, IVALUE = .002, DVALUE = .005; 
 	
 	private final PIDController		shooterPidController;
 	public ShooterSpeedController	shooterMotorControl = new ShooterSpeedController();

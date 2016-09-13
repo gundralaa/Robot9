@@ -7,10 +7,6 @@ import Team4450.Lib.CameraServer;
 import com.ni.vision.NIVision;
 import com.ni.vision.NIVision.Image;
 
-
-
-
-
 //import edu.wpi.first.wpilibj.CameraServer;
 import edu.wpi.first.wpilibj.Timer;
 

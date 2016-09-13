@@ -50,13 +50,13 @@ public class CameraFeed extends Thread
     		{
         		try
         		{
-        			cam1 = NIVision.IMAQdxOpenCamera("cam0", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
+        			cam1 = NIVision.IMAQdxOpenCamera("cam1", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
         		}
         		catch (Exception e) {}
         		
         		try
         		{
-        			cam2 = NIVision.IMAQdxOpenCamera("cam3", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
+        			cam2 = NIVision.IMAQdxOpenCamera("cam0", NIVision.IMAQdxCameraControlMode.CameraControlModeController);
         		}
         		catch (Exception e) {}
     		}

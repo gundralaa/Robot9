@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-07.28.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-09.12.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -63,7 +63,9 @@ public class Robot extends SampleRobot
   Thread               	monitorBatteryThread, monitorDistanceThread, monitorCompressorThread;
   CameraFeed2			cameraThread;
     
-  static final String  	CAMERA_IP = "10.44.50.11";
+  //static final String  	CAMERA_IP = "10.44.50.11";			// Raspberry Pi
+  //static final String  	CAMERA_IP = "10.44.50.22";			// RoboRio IP
+  static final String  	CAMERA_IP = "roborio-4450-frc.local";	// RoboRio mDNS name
   static final int	   	USB_CAMERA = 2;
   static final int     	IP_CAMERA = 3;
  
@@ -164,12 +166,17 @@ public class Robot extends SampleRobot
      
         // calibrate the gyro.
         
-        gyro.initGyro();
-        gyro.setSensitivity(.007);	// Analog Devices model ADSR-S652.
-        gyro.calibrate();
+//        gyro.initGyro();
+//        gyro.setSensitivity(.007);	// Analog Devices model ADSR-S652.
+//        gyro.calibrate();
+
+   		// Force camera IP addr set by robot button on DS to ON. We start with
+        // camera IP set here and operator can use button on DS to fall back to
+        // standard setting of camera IP from robot IP by the Dashboard code.
+   		SmartDashboard.putBoolean("CameraByRobot", true);
         
    		// Set starting camera feed mode on driver station to USB-HW
-        // and IP address of system hosting the camera.
+        // and IP address of system hosting the camera feed.
       
    		SmartDashboard.putNumber("CameraSelect", USB_CAMERA);
    		SmartDashboard.putString("RobotCameraIP", CAMERA_IP);
@@ -196,8 +203,8 @@ public class Robot extends SampleRobot
    		// this case the usb camera is plugged into the Pi and the Pi is running Grip
    		// feeding images to Grip and Grip provides an MJpeg image stream to the DS.
       
-   		//cameraThread = new CameraFeed2(this);
-   		//cameraThread.start();
+   		cameraThread = new CameraFeed2(this);
+   		cameraThread.start();
 
    		// Start Grip and suspend it when running it on the RoboRio.
         //Grip.suspendGrip(true)
