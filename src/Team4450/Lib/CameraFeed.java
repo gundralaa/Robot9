@@ -18,19 +18,36 @@ import edu.wpi.first.wpilibj.Timer;
 
 public class CameraFeed extends Thread
 {
-	public	int		 		cam1 = -1, cam2 = -1;
-	public	double			frameRate = 30;		// frames per second
-	private int 			currentCamera;
-	private Image 			frame;
-	private CameraServer 	server;
-	private boolean			cameraChangeInProgress;
-	private Robot			robot;
+	public	int		 			cam1 = -1, cam2 = -1;
+	public	double				frameRate = 30;		// frames per second
+	private int 				currentCamera;
+	private Image 				frame;
+	private CameraServer 		server;
+	private boolean				cameraChangeInProgress;
+	private Robot				robot;
+	private static CameraFeed	cameraFeed;
+
+	// Create single instance of this class and return that single instance to any callers.
 	
 	/**
+	 * Get a reference to global CameraFeed object.
 	 * @param robot Robot class instance.
+	 * @return Reference to global CameraFeed object.
 	 */
+	  
+	public static CameraFeed getInstance(Robot robot) 
+	{
+		Util.consoleLog();
+		
+		if (cameraFeed == null) cameraFeed = new CameraFeed(robot);
+	    
+	    return cameraFeed;
+	}
 
-	public CameraFeed(Robot robot)
+	// Private constructor means callers must use getInstance.
+	// This is the singleton class model.
+	
+	private CameraFeed(Robot robot)
 	{
 		try
 		{

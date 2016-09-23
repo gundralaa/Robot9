@@ -17,8 +17,26 @@ import edu.wpi.first.wpilibj.Ultrasonic;
 class MonitorDistance extends Thread
 {
     Robot robot;
+    private static MonitorDistance	monitorDistance;
+
+    // Create single instance of this class and return that single instance to any callers.
+    // This is the singleton class model. You don't use new, you use getInstance.
+      
+    /**
+     * Get a reference to global MonitorDistance Thread object.
+     * @return Reference to global MonitorDistance object.
+     */
     
-	MonitorDistance(Robot robot)
+    public static MonitorDistance getInstance(Robot robot) 
+    {
+  	 Util.consoleLog();
+      	
+       if (monitorDistance == null) monitorDistance = new MonitorDistance(robot);
+          
+       return monitorDistance;
+    }
+    
+	private MonitorDistance(Robot robot)
 	{
 		Util.consoleLog();
         this.robot = robot;

@@ -33,21 +33,14 @@ import edu.wpi.first.wpilibj.vision.USBCamera;
 
 public class CameraServer 
 {
-  private static final int kPort = 1180;
-  private static final byte[] kMagicNumber = {0x01, 0x00, 0x00, 0x00};
-  private static final int kSize640x480 = 0;
-  private static final int kSize320x240 = 1;
-  private static final int kSize160x120 = 2;
+  private static final int 		kPort = 1180;
+  private static final byte[] 	kMagicNumber = {0x01, 0x00, 0x00, 0x00};
+  private static final int 		kSize640x480 = 0;
+  private static final int 		kSize320x240 = 1;
+  private static final int 		kSize160x120 = 2;
   private static final int 		kHardwareCompression = -1;
   private static final int 		kMaxImageSize = 200000;
   private static CameraServer	server;
-
-  public static CameraServer getInstance() 
-  {
-    if (server == null) server = new CameraServer();
-    
-    return server;
-  }
 
   private int 		 m_quality;
   private boolean 	 m_autoCaptureStarted;
@@ -68,6 +61,20 @@ public class CameraServer
     }
   }
 
+  // Create single instance of this class and return that single instance to any callers.
+  
+  public static CameraServer getInstance() 
+  {
+	Util.consoleLog();
+	
+    if (server == null) server = new CameraServer();
+    
+    return server;
+  }
+
+  // Private constructor means this class cannot be instantiated. All access is via
+  // getInstance(). This is the singleton class model.
+  
   private CameraServer() 
   {
     m_quality = 50;

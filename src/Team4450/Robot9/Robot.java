@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-09.12.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-09.22.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -42,7 +42,7 @@ public class Robot extends SampleRobot
   final Joystick        rightStick = new Joystick(1);	// 2
   final Joystick		launchPad = new Joystick(3);
   
-  final Compressor		compressor = new Compressor(0);	// Compressor class represents the PCM.
+  final Compressor		compressor = new Compressor(0);	// Compressor class represents the PCM. There are 2.
   final Compressor		compressor1 = new Compressor(1);
   final AnalogGyro		gyro = new AnalogGyro(0);		// gyro must be plugged into analog port 0 or 1.
   
@@ -52,7 +52,6 @@ public class Robot extends SampleRobot
   
   PowerDistributionPanel PDP = new PowerDistributionPanel();
   
-  //AxisCamera			camera = null;
   CameraServer			usbCameraServer = null;
 
   DriverStation         ds = null;
@@ -79,6 +78,8 @@ public class Robot extends SampleRobot
   // 6 - wheel motor rr
   // 7 - pickup motor
   
+  // Constructor.
+  
   public Robot() throws IOException
   {	
 	// Set up our custom logger.
@@ -103,6 +104,8 @@ public class Robot extends SampleRobot
     catch (Throwable e) {Util.logException(e);}
   }
     
+  // Initialization, called at class start up.
+  
   public void robotInit()
   {
    	try
@@ -129,13 +132,19 @@ public class Robot extends SampleRobot
    		SmartDashboard.putBoolean("CompressorEnabled", Boolean.parseBoolean(robotProperties.getProperty("CompressorEnabledByDefault")));
 
    		// Initialize PID data entry fields on the DS to thier default values.
+   		// We create an instance of Shooter class to get the default PID values set
+   		// according to which robot is running this code.
+   		
+   		Shooter shooter = new Shooter(this, null);
    		
    		SmartDashboard.putBoolean("PIDEnabled", true);
-   		SmartDashboard.putNumber("PValue", Shooter.PVALUE);
-   		SmartDashboard.putNumber("IValue", Shooter.IVALUE);
-   		SmartDashboard.putNumber("DValue", Shooter.DVALUE);
-   		SmartDashboard.putNumber("LowSetting", Shooter.SHOOTER_LOW_RPM);
-   		SmartDashboard.putNumber("HighSetting", Shooter.SHOOTER_HIGH_RPM);
+   		SmartDashboard.putNumber("PValue", shooter.PVALUE);
+   		SmartDashboard.putNumber("IValue", shooter.IVALUE);
+   		SmartDashboard.putNumber("DValue", shooter.DVALUE);
+   		SmartDashboard.putNumber("LowSetting", shooter.SHOOTER_LOW_RPM);
+   		SmartDashboard.putNumber("HighSetting", shooter.SHOOTER_HIGH_RPM);
+   		
+   		shooter.dispose();
    		
    		// Reset PDB & PCM sticky faults.
       
@@ -191,10 +200,10 @@ public class Robot extends SampleRobot
       
    		// Start the battery, compressor, camera feed and distance monitoring Tasks.
 
-   		monitorBatteryThread = new MonitorBattery(ds);
+   		monitorBatteryThread = MonitorBattery.getInstance(ds); //new MonitorBattery(ds);
    		monitorBatteryThread.start();
 
-   		monitorCompressorThread = new MonitorCompressor();
+   		monitorCompressorThread =MonitorCompressor.getInstance();	//new MonitorCompressor();
    		monitorCompressorThread.start();
 
    		// Start camera server using our class for usb cameras.
@@ -203,7 +212,7 @@ public class Robot extends SampleRobot
    		// this case the usb camera is plugged into the Pi and the Pi is running Grip
    		// feeding images to Grip and Grip provides an MJpeg image stream to the DS.
       
-   		cameraThread = new CameraFeed2(this);
+   		cameraThread = CameraFeed2.getInstance(this); //new CameraFeed2(this);
    		cameraThread.start();
 
    		// Start Grip and suspend it when running it on the RoboRio.
@@ -212,14 +221,16 @@ public class Robot extends SampleRobot
    		
    		// Start thread to monitor distance sensor.
    		
-   		//monitorDistanceThread = new MonitorDistanceMBX(this);
+   		//monitorDistanceThread = MonitorDistanceMBX.getInstance(this);	//;new MonitorDistanceMBX(this);
    		//monitorDistanceThread.start();
    		
    		Util.consoleLog("end");
     }
     catch (Throwable e) {Util.logException(e);}
   }
-    
+  
+  // Called when robot is disabled.
+  
   public void disabled()
   {
 	  try
@@ -248,7 +259,9 @@ public class Robot extends SampleRobot
 	  }
 	  catch (Throwable e) {Util.logException(e);}
   }
-    
+  
+  // Called at the start of Autonomous period.
+  
   public void autonomous() 
   {
       try
@@ -274,7 +287,7 @@ public class Robot extends SampleRobot
     	  compressor.clearAllPCMStickyFaults();
     	  compressor1.clearAllPCMStickyFaults();
              
-    	  // Start autonomous process contained in the MyAutonomous class.
+    	  // Start autonomous process contained in the Autonomous class.
         
     	  Autonomous autonomous = new Autonomous(this);
         
@@ -288,6 +301,8 @@ public class Robot extends SampleRobot
       catch (Throwable e) {Util.logException(e);}
   }
 
+  // Called at the start of the teleop period.
+  
   public void operatorControl() 
   {
       try
@@ -314,7 +329,7 @@ public class Robot extends SampleRobot
           
           //Grip.suspendGrip(false);
         
-          // Start operator control process contained in the MyTeleop class.
+          // Start operator control process contained in the Teleop class.
         
           Teleop teleOp = new Teleop(this);
        
