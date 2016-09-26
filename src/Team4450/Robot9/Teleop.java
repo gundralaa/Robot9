@@ -6,6 +6,7 @@ import java.lang.Math;
 import Team4450.Lib.*;
 import Team4450.Lib.JoyStick.*;
 import Team4450.Lib.LaunchPad.*;
+import edu.wpi.first.wpilibj.AnalogInput;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Timer;
@@ -25,11 +26,12 @@ class Teleop
 	private final FestoDA		defenseArmsValve = new FestoDA(1, 4);
 	private boolean				ptoMode = false, limitSwitchEnabled = false;
 	private boolean				autoTarget = false, climbPrepEnabled = false, climbPrepInProgress = false;
-	private double				shooterPower = Shooter.SHOOTER_HIGH_POWER;
+	private final Shooter		shooter;
+	private double				shooterPower;
 	private Relay				headLight = new Relay(0, Relay.Direction.kForward);
 	//private final RevDigitBoard	revBoard = RevDigitBoard.getInstance();
-	//private final DigitalInput	hallEffectSensor = new DigitalInput(0);
-	private final Shooter		shooter;
+	//private final DigitalInput	hallEffectSensorDigital = new DigitalInput(9);
+	//private final AnalogInput	hallEffectSensorAnalog = new AnalogInput(3);
 	private final DigitalInput	climbUpSwitch = new DigitalInput(3);
 
 	private Vision2016			vision = new Vision2016();
@@ -48,6 +50,8 @@ class Teleop
 		this.robot = robot;
 		
 		shooter = new Shooter(robot, this);
+		
+		shooterPower = shooter.SHOOTER_HIGH_POWER;
 	}
 
 	// Free all objects that need it.
@@ -182,7 +186,8 @@ class Teleop
 							shooter.shooterSpeedSource.getRate() * 60, shooter.shooterMotorControl.get(),
 							shooter.shooterMotorControl.get());
 			//LCD.printLine(7, "shooterspeedsource=%.0f", shooter.shooterSpeedSource.pidGet());
-
+			//LCD.printLine(7, "hall effect=%b", hallEffectSensorDigital.get());
+			//LCD.printLine(7, "hall effect=%f", hallEffectSensorAnalog.getVoltage());
 			// This corrects stick alignment error when trying to drive straight. 
 			//if (Math.abs(rightY - leftY) < 0.2) rightY = leftY;
 			
@@ -511,88 +516,87 @@ class Teleop
 	{
 	    public void ButtonDown(LaunchPadEvent launchPadEvent) 
 	    {
-			Util.consoleLog("%s, latchedState=%b", launchPadEvent.control.id.name(),  launchPadEvent.control.latchedState);
+	    	LaunchPadControl	control = launchPadEvent.control;
+	    	
+			Util.consoleLog("%s, latchedState=%b", control.id.name(),  control.latchedState);
 			
-			if (launchPadEvent.control.id.equals(LaunchPad.LaunchPadControlIDs.BUTTON_YELLOW))
-				if (launchPadEvent.control.latchedState)
-					shooter.HoodUp();
-				else
-					shooter.HoodDown();
-			
-			if (launchPadEvent.control.id.equals(LaunchPad.LaunchPadControlIDs.BUTTON_BLACK))
-				if (climbPrepEnabled)
-					climbPrep();
-				else
-				{
+			switch(control.id)
+			{
+				case BUTTON_YELLOW:
     				if (launchPadEvent.control.latchedState)
-    					shooter.PickupArmDown();
+    					shooter.HoodUp();
     				else
-    					shooter.PickupArmUp();
-				}
+    					shooter.HoodDown();
+
+    				break;
+    				
+				case BUTTON_BLACK:
+    				if (climbPrepEnabled)
+    					climbPrep();
+    				else
+    				{
+        				if (launchPadEvent.control.latchedState)
+        					shooter.PickupArmDown();
+        				else
+        					shooter.PickupArmUp();
+    				}
+    				
+    				break;
 			
-			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE)
-			{
-				if (launchPadEvent.control.latchedState)
-    				shifterHigh();
-    			else
-    				shifterLow();
-			}
+//				case BUTTON_BLUE:
+//    				if (launchPadEvent.control.latchedState)
+//        				shifterHigh();
+//        			else
+//        				shifterLow();
+//    				
+//    				break;
 
-			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_GREEN)
-			{
-				if (launchPadEvent.control.latchedState)
-    				tiltDown();
-    			else
-    				tiltUp();
-			}
+				case BUTTON_GREEN:
+    				if (launchPadEvent.control.latchedState)
+        				tiltDown();
+        			else
+        				tiltUp();
 
-			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE)
-			{
-				if (launchPadEvent.control.latchedState)
-				{
-					shifterLow();
-					ptoEnable();
-				}
-    			else
-    				ptoDisable();
-			}
+    				break;
+    				
+				case BUTTON_BLUE:
+    				if (launchPadEvent.control.latchedState)
+    				{
+    					shifterLow();
+    					ptoEnable();
+    				}
+        			else
+        				ptoDisable();
 
-			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_BLUE_RIGHT)
-			{
-//				if (launchPadEvent.control.latchedState)
-//					climberArmsDown();
-//				else
-//    				climberArmsUp();
-				
-				// Start auto targeting on button push, stop on next button push.
-				if (!autoTarget)
-					seekTargetGrip();
-				else
-					autoTarget = false;
-			}
+    				break;
+    				
+				case BUTTON_BLUE_RIGHT:
+    				// Start auto targeting on button push, stop on next button push.
+    				if (!autoTarget)
+    					seekTargetGrip();
+    				else
+    					autoTarget = false;
 
-			if (launchPadEvent.control.id == LaunchPadControlIDs.BUTTON_RED_RIGHT)
-			{
-//				limitSwitchEnabled = !limitSwitchEnabled;
-//				SmartDashboard.putBoolean("LSOverride", !limitSwitchEnabled);
+    				break;
+    				
+				case BUTTON_RED_RIGHT:
+    				if (launchPadEvent.control.latchedState)
+    					shooter.StartAutoBallSpit();
+    				else
+    					shooter.StopAutoBallSpit();
 
-//				if (launchPadEvent.control.latchedState)
-//					lightOn();
-//				else
-//					lightOff();
+    				break;
+    				
+				case BUTTON_RED:
+    				if (launchPadEvent.control.latchedState)
+        				defenseArmsDown();
+        			else
+        				defenseArmsUp();
 
-				if (launchPadEvent.control.latchedState)
-					shooter.StartAutoBallSpit();
-				else
-					shooter.StopAutoBallSpit();
-			}
-			
-			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.BUTTON_RED))
-			{
-				if (launchPadEvent.control.latchedState)
-    				defenseArmsDown();
-    			else
-    				defenseArmsUp();
+    				break;
+    				
+				default:
+					break;
 			}
 	    }
 	    
@@ -603,43 +607,48 @@ class Teleop
 
 	    public void SwitchChange(LaunchPadEvent launchPadEvent) 
 	    {
-	    	Util.consoleLog("%s", launchPadEvent.control.id.name());
+	    	LaunchPadControl	control = launchPadEvent.control;
+	    	
+	    	Util.consoleLog("%s", control.id.name());
 
-	    	// Change which USB camera is being served by the RoboRio when using dual usb cameras.
+	    	switch(control.id)
+	    	{
+	    		// Turn PID on/off.
+	    		case ROCKER_LEFT_FRONT:
+    				if (control.latchedState)
+    					SmartDashboard.putBoolean("PIDEnabled", true);
+    				else
+    					SmartDashboard.putBoolean("PIDEnabled", false);
+    				
+    				break;
 			
-			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_LEFT_FRONT))
-//				if (launchPadEvent.control.latchedState)
-//					robot.cameraThread.ChangeCamera(robot.cameraThread.cam2);
-//				else
-//					robot.cameraThread.ChangeCamera(robot.cameraThread.cam1);
-				
-				if (launchPadEvent.control.latchedState)
-					SmartDashboard.putBoolean("PIDEnabled", true);
-				else
-					SmartDashboard.putBoolean("PIDEnabled", false);
-			
-			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_LEFT_BACK))
-//				if (launchPadEvent.control.latchedState)
-//					climbPrepEnabled = true;
-//				else
-//					climbPrepEnabled = false;
-			
-				if (launchPadEvent.control.latchedState)
-					robot.SetCANTalonBrakeMode(false);	// coast
-				else
-	    			robot.SetCANTalonBrakeMode(true);	// brake
+				// Set CAN Talon brake mmode.
+	    		case ROCKER_LEFT_BACK:
+    				if (control.latchedState)
+    					robot.SetCANTalonBrakeMode(false);	// coast
+    				else
+    	    			robot.SetCANTalonBrakeMode(true);	// brake
+    				
+    				break;
 	
-			if (launchPadEvent.control.id.equals(LaunchPadControlIDs.ROCKER_RIGHT))
-				if (launchPadEvent.control.latchedState)
-				{
-					shooterPower = Shooter.SHOOTER_LOW_POWER;
-					SmartDashboard.putBoolean("ShooterLowPower", true);
-				}
-				else
-				{
-					shooterPower = Shooter.SHOOTER_HIGH_POWER;
-					SmartDashboard.putBoolean("ShooterLowPower", false);
-				}
+				// Set shooter power low/high.
+	    		case ROCKER_RIGHT:
+    				if (control.latchedState)
+    				{
+    					shooterPower = shooter.SHOOTER_LOW_POWER;
+    					SmartDashboard.putBoolean("ShooterLowPower", true);
+    				}
+    				else
+    				{
+    					shooterPower = shooter.SHOOTER_HIGH_POWER;
+    					SmartDashboard.putBoolean("ShooterLowPower", false);
+    				}
+
+    				break;
+    				
+				default:
+					break;
+	    	}
 	    }
 	}
 
@@ -650,7 +659,9 @@ class Teleop
 		
 	    public void ButtonDown(JoyStickEvent joyStickEvent) 
 	    {
-			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
+	    	JoyStickButton	button = joyStickEvent.button;
+	    	
+			Util.consoleLog("%s, latchedState=%b", button.id.name(),  button.latchedState);
 			
 			// Change which USB camera is being served by the RoboRio when using dual usb cameras.
 			
@@ -660,21 +671,23 @@ class Teleop
 //				else
 //					((CameraFeed) robot.cameraThread).ChangeCamera(((CameraFeed) robot.cameraThread).cam1);			
 
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_LEFT))
-				if (joyStickEvent.button.latchedState)
-					robot.cameraThread.ChangeCamera();
-				else
-					robot.cameraThread.ChangeCamera();			
-			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
-				shooter.StopShoot();
-			
-//			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
-//				//invertDrive = joyStickEvent.button.latchedState;
-//				if (joyStickEvent.button.latchedState)
-//					lightOn();
-//				else
-//					lightOff();
+			switch(button.id)
+			{
+				case TOP_LEFT:
+    				if (button.latchedState)
+    					robot.cameraThread.ChangeCamera();
+    				else
+    					robot.cameraThread.ChangeCamera();			
+    
+    				break;
+				
+				case TOP_MIDDLE:
+					shooter.StopShoot();
+					break;
+					
+				default:
+					break;
+			}
 	    }
 
 	    public void ButtonUp(JoyStickEvent joyStickEvent) 
@@ -689,22 +702,30 @@ class Teleop
 	{
 	    public void ButtonDown(JoyStickEvent joyStickEvent) 
 	    {
-			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
+	    	JoyStickButton	button = joyStickEvent.button;
+	    	
+			Util.consoleLog("%s, latchedState=%b", button.id.name(),  button.latchedState);
 			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
+			switch(button.id)
 			{
-				if (joyStickEvent.button.latchedState)
-    				shifterHigh();
-    			else
-    				shifterLow();
-			}
-			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
-			{
-				if (joyStickEvent.button.latchedState)
-    				climberArmsDown();
-    			else
-    				climberArmsUp();
+				case TRIGGER:
+					if (button.latchedState)
+	    				shifterHigh();
+	    			else
+	    				shifterLow();
+
+					break;
+					
+				case TOP_MIDDLE:
+					if (button.latchedState)
+	    				climberArmsDown();
+	    			else
+	    				climberArmsUp();
+
+					break;
+					
+				default:
+					break;
 			}
 	    }
 
@@ -720,37 +741,56 @@ class Teleop
 	{
 	    public void ButtonDown(JoyStickEvent joyStickEvent) 
 	    {
-			Util.consoleLog("%s, latchedState=%b", joyStickEvent.button.id.name(),  joyStickEvent.button.latchedState);
+	    	JoyStickButton	button = joyStickEvent.button;
+	    	
+			Util.consoleLog("%s, latchedState=%b", button.id.name(),  button.latchedState);
 			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TRIGGER))
+			switch(button.id)
 			{
-				//lightOff();
-				shooter.StartShoot(false, shooterPower);
+				// Trigger starts shoot sequence.
+				case TRIGGER:
+    				shooter.StartShoot(false, shooterPower);
+    				break;
+				
+				// Start auto pickup sequence.
+				case TOP_RIGHT:
+    				if (button.latchedState)
+    					shooter.StartAutoPickup();
+    				else
+    					shooter.StopAutoPickup();
+
+    				break;
+    				
+    			// Manually turn shooter motor on/off.
+				case TOP_LEFT:
+    				if (button.latchedState)
+    					shooter.ShooterMotorStart(shooterPower);
+    				else
+    					shooter.ShooterMotorStop();
+
+    				break;
+    				
+    			// Manually turn pickup motor on/off in the IN direction.
+				case TOP_MIDDLE:
+    				if (button.latchedState)
+    					shooter.PickupMotorIn(1.0);
+    				else
+    					shooter.PickupMotorStop();
+
+    				break;
+    				
+    			// Manually turn pickup motor on/off in the OUT direction.
+				case TOP_BACK:
+    				if (button.latchedState)
+    					shooter.PickupMotorOut(1.0);
+    				else
+    					shooter.PickupMotorStop();
+    				
+    				break;
+    				
+				default:
+					break;
 			}
-			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_RIGHT))
-				if (joyStickEvent.button.latchedState)
-					shooter.StartAutoPickup();
-				else
-					shooter.StopAutoPickup();
-					
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_LEFT))
-				if (joyStickEvent.button.latchedState)
-					shooter.ShooterMotorStart(shooterPower);
-				else
-					shooter.ShooterMotorStop();
-			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_MIDDLE))
-				if (joyStickEvent.button.latchedState)
-					shooter.PickupMotorIn(1.0);
-				else
-					shooter.PickupMotorStop();
-			
-			if (joyStickEvent.button.id.equals(JoyStickButtonIDs.TOP_BACK))
-				if (joyStickEvent.button.latchedState)
-					shooter.PickupMotorOut(1.0);
-				else
-					shooter.PickupMotorStop();
 	    }
 
 	    public void ButtonUp(JoyStickEvent joyStickEvent) 

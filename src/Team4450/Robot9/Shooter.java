@@ -31,19 +31,16 @@ public class Shooter
 	// encoder is plugged into dio port 4 - orange=+5v blue=signal, dio port 5 black=gnd yellow=signal. 
 	public Encoder					encoder = new Encoder(4, 5, true, EncodingType.k4X);
 
-	// Competition robot defaults.
-	//public static double			SHOOTER_LOW_POWER = .42, SHOOTER_HIGH_POWER = .60;
-	//public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 7800;
-	//public static double			PVALUE = .0025, IVALUE = 0.0025, DVALUE = .003; 
+	// Competition robot PID defaults. These look like static constants but you must instantiate
+	// this class to set up these items for comp or clone robot before accessing them.
+	public double					SHOOTER_LOW_POWER, SHOOTER_HIGH_POWER;
+	public double					SHOOTER_LOW_RPM, SHOOTER_HIGH_RPM;
+	public double					PVALUE, IVALUE, DVALUE; 
 
-	// Clone robot defaults.
-	public static double			SHOOTER_LOW_POWER = .45, SHOOTER_HIGH_POWER = 1.0;
-	public static double			SHOOTER_LOW_RPM = 4900, SHOOTER_HIGH_RPM = 9500;
-	public static double			PVALUE = .002, IVALUE = .002, DVALUE = .005; 
-	
 	private final PIDController		shooterPidController;
 	public ShooterSpeedController	shooterMotorControl = new ShooterSpeedController();
 	public ShooterSpeedSource		shooterSpeedSource = new ShooterSpeedSource(encoder);
+	
 	private Thread					autoPickupThread, autoSpitBallThread, shootThread;
 
 	Shooter(Robot robot, Teleop teleop)
@@ -68,15 +65,39 @@ public class Shooter
 		shooterPidController = new PIDController(0.0, 0.0, 0.0, shooterSpeedSource, shooterMotorControl);
 
 		// Handle the fact that the pickup motor is a CANTalon on competition robot
-		// and a pwm Talon on clone.
+		// and a pwm Talon on clone. Set PID defaults. Note that this sets the default
+		// values which are reflected on the DS. Changes there change the values in use
+		// by the running program.
 		
 		if (robot.isComp) 
 		{
 			pickupMotor = new CANTalon(7);
 			robot.InitializeCANTalon((CANTalon) pickupMotor);
+
+			// Competition robot PID defaults.
+			SHOOTER_LOW_POWER = .45;
+			SHOOTER_HIGH_POWER = .70;
+			SHOOTER_LOW_RPM = 4900;
+			SHOOTER_HIGH_RPM = 9000;	//7800;
+
+			PVALUE = .0025;
+			IVALUE = .0025;
+			DVALUE = .003; 
 		}
 		else
+		{
 			pickupMotor = new Talon(7);
+
+			// Clone robot PID defaults.
+			SHOOTER_LOW_POWER = .45;
+			SHOOTER_HIGH_POWER = 1.0;
+			SHOOTER_LOW_RPM = 4900;
+			SHOOTER_HIGH_RPM = 9000;
+
+			PVALUE = .002; 
+			IVALUE = .002;
+			DVALUE = .005; 
+		}
 		
 		PickupArmUp();
 		HoodDown();
@@ -188,7 +209,7 @@ public class Shooter
 		if (SmartDashboard.getBoolean("PIDEnabled", true))
 		{
     		if (power == SHOOTER_LOW_POWER)
-    			// When shooting a low power, we will attempt to maintain a constant wheel speed (rpm)
+    			// When shooting at low power, we will attempt to maintain a constant wheel speed (rpm)
     			// using pid controller measuring rpm via the encoder. RPM determined experimentally
     			// by setting motors to the low power value and seeing what rpm results.
     			// This call starts the pid controller and turns shooter motor control over to it.

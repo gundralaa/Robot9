@@ -17,15 +17,30 @@ import edu.wpi.first.wpilibj.Timer;
 public class MonitorDistanceMBX extends Thread
 {
     Robot robot;
- 
+    private static MonitorDistanceMBX	monitorDistance;
+
+    // Create single instance of this class and return that single instance to any callers.
+    // This is the singleton class model. You don't use new, you use getInstance.
+      
     /**
-     * @param robot Robot class instance.
+     * Get a reference to global MonitorDistanceMBX Thread object.
+     * @return Reference to global MonitorDistanceMBX object.
      */
-	public MonitorDistanceMBX(Robot robot)
+    
+    public static MonitorDistanceMBX getInstance(Robot robot) 
+    {
+  	 Util.consoleLog();
+      	
+       if (monitorDistance == null) monitorDistance = new MonitorDistanceMBX(robot);
+          
+       return monitorDistance;
+    }
+
+    private MonitorDistanceMBX(Robot robot)
 	{
 		Util.consoleLog();
         this.robot = robot;
-        this.setName("MonitorDistance");
+        this.setName("MonitorDistanceMBX");
     }
     
     public void run()
@@ -62,6 +77,6 @@ public class MonitorDistanceMBX extends Thread
 				Timer.delay(1.0);
 			}
 		}
-		catch (Throwable e)  {e.printStackTrace(Util.logPrintStream);}
+		catch (Throwable e) {Util.logException(e);}
 	}
 }
