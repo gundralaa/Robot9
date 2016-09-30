@@ -30,7 +30,7 @@ import edu.wpi.first.wpilibj.Talon;
 
 public class Robot extends SampleRobot 
 {
-  static final String  	PROGRAM_NAME = "RAC9-09.26.16-01";
+  static final String  	PROGRAM_NAME = "RAC9-09.29.16-01";
 
   // Motor CAN ID/PWM port assignments (1=left-front, 2=left-rear, 3=right-front, 4=right-rear)
   CANTalon				LFCanTalon, LRCanTalon, RFCanTalon, RRCanTalon, LSlaveCanTalon, RSlaveCanTalon;
@@ -52,7 +52,7 @@ public class Robot extends SampleRobot
   
   PowerDistributionPanel PDP = new PowerDistributionPanel();
   
-  CameraServer			usbCameraServer = null;
+  CameraServer2			usbCameraServer = null;
 
   DriverStation         ds = null;
     	
@@ -155,7 +155,7 @@ public class Robot extends SampleRobot
    		// Configure motor controllers and RobotDrive.
         // Competition robot uses CAN Talons clone uses PWM Talons.
    		
-		if (robotProperties.getProperty("RobotId").equals("comp")) 
+		if (isComp) 
 			InitializeCANTalonDrive();
 		else
 			InitializePWMTalonDrive();
@@ -200,10 +200,10 @@ public class Robot extends SampleRobot
       
    		// Start the battery, compressor, camera feed and distance monitoring Tasks.
 
-   		monitorBatteryThread = MonitorBattery.getInstance(ds); //new MonitorBattery(ds);
+   		monitorBatteryThread = MonitorBattery.getInstance(ds);
    		monitorBatteryThread.start();
 
-   		monitorCompressorThread = MonitorCompressor.getInstance();	//new MonitorCompressor();
+   		monitorCompressorThread = MonitorCompressor.getInstance();
    		monitorCompressorThread.start();
 
    		// Start camera server using our class for usb cameras.
@@ -212,7 +212,7 @@ public class Robot extends SampleRobot
    		// this case the usb camera is plugged into the Pi and the Pi is running Grip
    		// feeding images to Grip and Grip provides an MJpeg image stream to the DS.
       
-   		cameraThread = CameraFeed2.getInstance(this); //new CameraFeed2(this);
+   		cameraThread = CameraFeed2.getInstance(this); 
    		cameraThread.start();
 
    		// Start Grip and suspend it when running it on the RoboRio.
@@ -221,7 +221,7 @@ public class Robot extends SampleRobot
    		
    		// Start thread to monitor distance sensor.
    		
-   		//monitorDistanceThread = MonitorDistanceMBX.getInstance(this);	//;new MonitorDistanceMBX(this);
+   		//monitorDistanceThread = MonitorDistanceMBX.getInstance(this);
    		//monitorDistanceThread.start();
    		
    		Util.consoleLog("end");
@@ -346,17 +346,19 @@ public class Robot extends SampleRobot
   {
   }
 
-  // Start WpiLib usb camera server for single selected camera.
+  // Start usb camera server for single camera.
   
   public void StartUSBCameraServer(String cameraName)
   {
 	  Util.consoleLog(cameraName);
 
-	  usbCameraServer = CameraServer.getInstance();
+	  usbCameraServer = CameraServer2.getInstance();
       usbCameraServer.setQuality(30);
       usbCameraServer.startAutomaticCapture(cameraName);
   }
 
+  // Create RobotDrive object for CAN Talon controllers.
+  
   private void InitializeCANTalonDrive()
   {
 	  Util.consoleLog();
@@ -390,6 +392,8 @@ public class Robot extends SampleRobot
       SetCANTalonBrakeMode(true);
   }
 
+  // Create RobotDrive object for PWM controllers.
+  
   private void InitializePWMTalonDrive()
   {
 	  Util.consoleLog();

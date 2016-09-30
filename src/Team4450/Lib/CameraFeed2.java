@@ -15,6 +15,10 @@ import edu.wpi.first.wpilibj.Timer;
  * Manages one or more usb cameras feeding their images to the 
  * CameraServer class to send to the DS.
  * Uses UsbCamera objects instead of NI image library.
+ * We create one or more usb camera objects and start them capturing
+ * images. We then loop on a thread getting the current image from
+ * the currently selected camera and pass the image to the camera
+ * server which passes the image to the driver station.
  */
 
 public class CameraFeed2 extends Thread
@@ -22,7 +26,7 @@ public class CameraFeed2 extends Thread
 	public	double				frameRate = 30;		// frames per second
 	private UsbCamera			currentCamera, cam1, cam2;
 	private Image 				frame;
-	private CameraServer 		server;
+	private CameraServer2 		server;
 	private Robot				robot;
 	private static CameraFeed2	cameraFeed;
 
@@ -59,8 +63,8 @@ public class CameraFeed2 extends Thread
             // Frame that will contain current camera image.
             frame = NIVision.imaqCreateImage(NIVision.ImageType.IMAGE_RGB, 0);
             
-            // Server that we'll give the image to.
-            server = CameraServer.getInstance();
+            // camera Server that we'll give the image to.
+            server = CameraServer2.getInstance();
             server.setQuality(50);
     
             // Open camera.
@@ -102,7 +106,7 @@ public class CameraFeed2 extends Thread
 		{
 			Util.consoleLog();
 
-			while (true)
+			while (!isInterrupted())
 			{
 				UpdateCameraImage();
 		
@@ -124,7 +128,7 @@ public class CameraFeed2 extends Thread
 	}
 	
 	/**
-	 * Stop image feed, ie close camera stream.
+	 * Stop image feed, ie close camera stream stop feed thread.
 	 */
 	public void EndFeed()
 	{
@@ -132,6 +136,8 @@ public class CameraFeed2 extends Thread
 		{
     		Util.consoleLog();
 
+    		Thread.currentThread().interrupt();
+    		
     		cam1.stopCapture();
     		
     		currentCamera = cam1 = null;
