@@ -29,6 +29,8 @@ import edu.wpi.first.wpilibj.vision.USBCamera;
  * Camera Server copied from WpiLib source. Implements an M-JPEG streamer
  * that feeds images to the DS. 
  * Copied here for study and possible customization.
+ * Corrected error handling and added logging. 
+ * Made this class a singleton.
  */
 
 public class CameraServer2 
@@ -89,6 +91,9 @@ public class CameraServer2
   
     for (int i = 0; i < 3; i++) 
       m_imageDataPool.addLast(ByteBuffer.allocateDirect(kMaxImageSize));
+    
+    // Thread that runs all the time reading images from camera or the
+    // setImage() method and feeds the images to the DS.
     
     final Thread serverThread = new Thread(new Runnable() 
     {
@@ -349,6 +354,7 @@ public class CameraServer2
    */
   protected void serve() throws Exception 
   {
+	// Open server socket to listen for connection from DS.
     ServerSocket socket = new ServerSocket();
     socket.setReuseAddress(true);
     InetSocketAddress address = new InetSocketAddress(kPort);
@@ -358,6 +364,7 @@ public class CameraServer2
     {
       try 
       {
+    	// Accept connection from DS into socket1.
         Socket socket1 = socket.accept();
 
         DataInputStream is = new DataInputStream(socket1.getInputStream());
@@ -366,7 +373,7 @@ public class CameraServer2
         int fps = is.readInt();
         int compression = is.readInt();
         int size = is.readInt();
-
+        
         if (compression != kHardwareCompression) 
         {
           Util.consoleLog("Hardware compression != -1, wrong camera type on Dashboard.");
@@ -396,7 +403,7 @@ public class CameraServer2
 
         long period = (long) (1000 / (1.0 * fps));
         
-        // Loop waiting on image then sending image.
+        // Loop waiting on next image then sending image.
         
         while (true) 
         {
@@ -429,7 +436,7 @@ public class CameraServer2
             os.writeInt(imageArray.length);
             os.write(imageArray);
             os.flush();
-          
+            
             long dt = System.currentTimeMillis() - t0;
 
             if (dt < period) Thread.sleep(period - dt);
@@ -438,7 +445,9 @@ public class CameraServer2
           {
         	// failure on connection. Close it and loop back to waiting for
         	// new connection.
-          	ex.printStackTrace(Util.logPrintStream);
+        	ex.printStackTrace(Util.logPrintStream);
+          	is.close();
+          	os.close();
           	socket1.close();
             break;	// eject from inner while loop.
           } 
