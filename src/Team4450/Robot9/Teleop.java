@@ -38,7 +38,10 @@ class Teleop
 
 	// Encoder is plugged into dio port 1 - orange=+5v blue=signal, dio port 2 black=gnd yellow=signal. 
 	private Encoder				encoder = new Encoder(1, 2, true, EncodingType.k4X);
-	
+
+	// encoder is plugged into dio port 4 - orange=+5v blue=signal, dio port 5 black=gnd yellow=signal. 
+	public Encoder				turretEncoder = new Encoder(6, 7, true, EncodingType.k4X);
+
 	// Encoder ribbon cable to dio ports: ribbon wire 2 = orange, 5 = yellow, 7 = blue, 10 = black
 
 	// Constructor.
@@ -73,6 +76,7 @@ class Teleop
 		//if (armMotor != null) armMotor.free();
 		if (climbUpSwitch != null) climbUpSwitch.free();
 		if (encoder != null) encoder.free();
+		if (turretEncoder != null) turretEncoder.free();
 		if (headLight != null) headLight.free();
 		//if (revBoard != null) revBoard.dispose();
 		//if (hallEffectSensor != null) hallEffectSensor.free();
@@ -185,6 +189,8 @@ class Teleop
 			LCD.printLine(6, "encoder=%d rpm=%.0f pwr=%.2f pwrR=%.2f", shooter.shooterSpeedSource.get(), 
 							shooter.shooterSpeedSource.getRate() * 60, shooter.shooterMotorControl.get(),
 							shooter.shooterMotorControl.get());
+			LCD.printLine(7, "turretEncoder=%d", turretEncoder.get());
+			
 			//LCD.printLine(7, "shooterspeedsource=%.0f", shooter.shooterSpeedSource.pidGet());
 			//LCD.printLine(7, "hall effect=%b", hallEffectSensorDigital.get());
 			//LCD.printLine(7, "hall effect=%f", hallEffectSensorAnalog.getVoltage());
